@@ -12,6 +12,21 @@ registerFont(path.join(__dirname, 'fonts', 'OpenSans-Regular.ttf'), {
   family: 'Open Sans'
 });
 
+// Hilfsfunktion für abgerundete Rechtecke
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -64,9 +79,8 @@ app.post('/', async (req, res) => {
     let lineHeight = 0;
 
     for (const size of fontSizes) {
-      ctx.font = `bold ${size}px "Open Sans"`;
+      ctx.font = `900 ${size}px "Open Sans"`;
       lineHeight = size * 1.3;
-      // Test: passt eine Zeile? (für Fälle mit kurzen Texten)
       const testWidth = ctx.measureText(overlayText).width;
       if (testWidth <= maxTextWidth) {
         chosenFontSize = size;
@@ -74,7 +88,7 @@ app.post('/', async (req, res) => {
       }
     }
 
-    ctx.font = `bold ${chosenFontSize}px "Open Sans"`;
+    ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
@@ -105,16 +119,25 @@ app.post('/', async (req, res) => {
     const rectX = (targetWidth - rectWidth) / 2;
     const rectY = targetHeight - rectHeight - 20;
 
-    // 🟦 Rechteck hinter Text
-    ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
-    ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+    // 🟦 Rechteck hinter Text mit abgerundeten Ecken und Schatten
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+    ctx.shadowBlur = 8;
+    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 15);
+    ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
+    ctx.fill();
+    ctx.restore();
 
-    // 🖋 Text zeichnen
+    // 🖋 Text zeichnen mit Schatten und fetter Schrift
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 4;
     ctx.fillStyle = '#333333';
     lines.forEach((line, index) => {
       const y = rectY + padding + index * lineHeight;
       ctx.fillText(line, targetWidth / 2, y);
     });
+    ctx.restore();
 
     res.setHeader('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
