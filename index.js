@@ -7,9 +7,10 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// 🆕 Font registrieren
-registerFont(path.join(__dirname, 'fonts', 'OpenSans-Regular.ttf'), {
-  family: 'Open Sans'
+// Fette Schriftart registrieren (z.B. OpenSans-Bold.ttf)
+registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
+  family: 'Open Sans',
+  weight: 'bold'
 });
 
 // Hilfsfunktion für abgerundete Rechtecke
@@ -33,7 +34,7 @@ app.post('/', async (req, res) => {
   overlayText = overlayText.toUpperCase();
 
   if (!imageUrl) {
-    return res.status(400).send('Missing "url" in request body');
+    return res.status(400).send('Missing \"url\" in request body');
   }
 
   try {
@@ -70,29 +71,15 @@ app.post('/', async (req, res) => {
       0, 0, targetWidth, targetHeight
     );
 
-    // 📦 Text vorbereiten
+    // Text vorbereiten
     const maxTextBlockHeight = targetHeight * 0.3;
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
     const fontSizes = [128, 96, 64, 48, 32];
     let chosenFontSize = 32;
     let lineHeight = 0;
+    let lines = [];
 
-    for (const size of fontSizes) {
-      ctx.font = `900 ${size}px "Open Sans"`;
-      lineHeight = size * 1.3;
-      const testWidth = ctx.measureText(overlayText).width;
-      if (testWidth <= maxTextWidth) {
-        chosenFontSize = size;
-        break;
-      }
-    }
-
-    ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-
-    // 🧠 Funktion zum Umbruch
     function wrapText(ctx, text, maxWidth) {
       const words = text.split(' ');
       const lines = [];
@@ -112,14 +99,37 @@ app.post('/', async (req, res) => {
       return lines;
     }
 
-    const lines = wrapText(ctx, overlayText, maxTextWidth);
+    // Wähle die größte Schriftgröße, bei der der Text in maximal 3 Zeilen passt
+    for (const size of fontSizes) {
+      ctx.font = `900 ${size}px \"Open Sans\"`;
+      lineHeight = size * 1.3;
+      const testLines = wrapText(ctx, overlayText, maxTextWidth);
+      const totalTextHeight = testLines.length * lineHeight;
+      if (testLines.length <= 3 && totalTextHeight <= maxTextBlockHeight) {
+        chosenFontSize = size;
+        lines = testLines;
+        break;
+      }
+    }
+
+    // Falls keine passende Größe gefunden wurde, nimm die kleinste
+    if (lines.length === 0) {
+      ctx.font = `900 ${fontSizes[fontSizes.length - 1]}px \"Open Sans\"`;
+      lineHeight = fontSizes[fontSizes.length - 1] * 1.3;
+      lines = wrapText(ctx, overlayText, maxTextWidth);
+    }
+
+    ctx.font = `900 ${chosenFontSize}px \"Open Sans\"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
     const totalTextHeight = lines.length * lineHeight;
     const rectWidth = maxTextWidth + padding * 2;
     const rectHeight = totalTextHeight + padding * 2;
     const rectX = (targetWidth - rectWidth) / 2;
     const rectY = targetHeight - rectHeight - 20;
 
-    // 🟦 Rechteck hinter Text mit abgerundeten Ecken und Schatten
+    // Rechteck hinter Text mit abgerundeten Ecken und Schatten
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.08)';
     ctx.shadowBlur = 8;
@@ -128,7 +138,7 @@ app.post('/', async (req, res) => {
     ctx.fill();
     ctx.restore();
 
-    // 🖋 Text zeichnen mit Schatten und fetter Schrift
+    // Text zeichnen mit Schatten und fetter Schrift
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.25)';
     ctx.shadowBlur = 4;
