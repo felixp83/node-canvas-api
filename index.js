@@ -24,7 +24,6 @@ app.post('/', async (req, res) => {
   try {
     const img = await loadImage(imageUrl);
 
-    // Zielmaße 2:3 Verhältnis (Pinterest)
     const targetWidth = 1000;
     const targetHeight = 1500;
     const targetRatio = targetWidth / targetHeight;
@@ -33,12 +32,9 @@ app.post('/', async (req, res) => {
     const origHeight = img.height;
     const origRatio = origWidth / origHeight;
 
-    let scale;
-    if (origRatio > targetRatio) {
-      scale = targetHeight / origHeight;
-    } else {
-      scale = targetWidth / origWidth;
-    }
+    let scale = origRatio > targetRatio
+      ? targetHeight / origHeight
+      : targetWidth / origWidth;
 
     const scaledWidth = Math.ceil(origWidth * scale);
     const scaledHeight = Math.ceil(origHeight * scale);
@@ -59,20 +55,21 @@ app.post('/', async (req, res) => {
       0, 0, targetWidth, targetHeight
     );
 
+    // 📦 Text vorbereiten
     const maxTextBlockHeight = targetHeight * 0.3;
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
-
     const fontSizes = [64, 48, 32, 24, 16];
     let chosenFontSize = 16;
-    let textHeight = 0;
+    let lineHeight = 0;
 
     for (const size of fontSizes) {
       ctx.font = `bold ${size}px "Open Sans"`;
-      const estimatedHeight = size * 1.2;
-      if (estimatedHeight + padding * 2 < maxTextBlockHeight) {
+      lineHeight = size * 1.3;
+      // Test: passt eine Zeile? (für Fälle mit kurzen Texten)
+      const testWidth = ctx.measureText(overlayText).width;
+      if (testWidth <= maxTextWidth) {
         chosenFontSize = size;
-        textHeight = estimatedHeight;
         break;
       }
     }
@@ -81,16 +78,43 @@ app.post('/', async (req, res) => {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
+    // 🧠 Funktion zum Umbruch
+    function wrapText(ctx, text, maxWidth) {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = words[0];
+
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = ctx.measureText(currentLine + ' ' + word).width;
+        if (width < maxWidth) {
+          currentLine += ' ' + word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      lines.push(currentLine);
+      return lines;
+    }
+
+    const lines = wrapText(ctx, overlayText, maxTextWidth);
+    const totalTextHeight = lines.length * lineHeight;
     const rectWidth = maxTextWidth + padding * 2;
-    const rectHeight = textHeight + padding * 2;
+    const rectHeight = totalTextHeight + padding * 2;
     const rectX = (targetWidth - rectWidth) / 2;
     const rectY = targetHeight - rectHeight - 20;
 
+    // 🟦 Rechteck hinter Text
     ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
 
+    // 🖋 Text zeichnen
     ctx.fillStyle = '#333333';
-    ctx.fillText(overlayText, targetWidth / 2, rectY + padding);
+    lines.forEach((line, index) => {
+      const y = rectY + padding + index * lineHeight;
+      ctx.fillText(line, targetWidth / 2, y);
+    });
 
     res.setHeader('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
