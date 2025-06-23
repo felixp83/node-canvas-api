@@ -74,7 +74,7 @@ app.post('/', async (req, res) => {
     const maxTextBlockHeight = targetHeight * 0.3;
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
-    const fontSizes = [64, 48, 32, 24, 16];
+    const fontSizes = [128, 96, 64, 48, 32];
     let chosenFontSize = 32;
     let lineHeight = 0;
 
