@@ -50,7 +50,7 @@ function breakLongWord(ctx, word, maxWidth) {
   return parts;
 }
 
-// Textumbruch: maximal 2 Zeilen, lange Wörter werden getrennt
+// Textumbruch: maximal 2 Zeilen, lange Wörter werden getrennt, KEIN Abschneiden
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [];
@@ -79,6 +79,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
       currentLine = word;
       if (lines.length === maxLines) return lines;
     }
+    if (lines.length === maxLines) return lines;
   }
   if (currentLine.length > 0 && lines.length < maxLines) lines.push(currentLine);
   return lines;
@@ -131,19 +132,25 @@ app.post('/', async (req, res) => {
     const maxTextBlockHeight = targetHeight * 0.3;
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
-    const fontSizes = [128, 96, 64, 48, 32];
-    let chosenFontSize = fontSizes[fontSizes.length - 1];
-    let lines = [];
-    let lineHeight = 0;
     const maxLines = 2;
 
-    // Wähle die größte Schriftgröße, bei der der Textblock (max. 2 Zeilen) in den Platz passt
-    for (const size of fontSizes) {
+    // Suche die größtmögliche Schriftgröße, bei der der Text komplett in 2 Zeilen passt
+    let chosenFontSize = 16;
+    let lines = [];
+    let lineHeight = 0;
+    for (let size = 128; size >= 16; size -= 2) {
       ctx.font = `900 ${size}px \"Open Sans\"`;
       lineHeight = size * 1.3;
       const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = testLines.length * lineHeight;
-      if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
+      // Prüfe, ob der gesamte Text untergebracht wurde
+      const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+      const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+      if (
+        testLines.length <= maxLines &&
+        totalTextHeight <= maxTextBlockHeight &&
+        joined === original
+      ) {
         chosenFontSize = size;
         lines = testLines;
         break;
@@ -152,8 +159,8 @@ app.post('/', async (req, res) => {
 
     // Falls keine passende Größe gefunden wurde, nimm die kleinste
     if (lines.length === 0) {
-      ctx.font = `900 ${fontSizes[fontSizes.length - 1]}px \"Open Sans\"`;
-      lineHeight = fontSizes[fontSizes.length - 1] * 1.3;
+      ctx.font = `900 16px \"Open Sans\"`;
+      lineHeight = 16 * 1.3;
       lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     }
 
