@@ -4,8 +4,11 @@ const { createCanvas } = require('canvas');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  const text = req.query.text || 'Hello, World!';
+// Middleware, um JSON im Body zu parsen
+app.use(express.json());
+
+app.post('/', (req, res) => {
+  const text = req.body.overlay || 'Hello, World!';
 
   const width = 800;
   const height = 400;
@@ -15,7 +18,7 @@ app.get('/', (req, res) => {
 
   // Hintergrund
   ctx.fillStyle = '#222';
-  ctx.fillRect(0, 0, width, height);  // ← das war vorher abgeschnitten
+  ctx.fillRect(0, 0, width, height);
 
   // Text
   ctx.fillStyle = '#ffffff';
@@ -24,7 +27,7 @@ app.get('/', (req, res) => {
   ctx.textBaseline = 'middle';
   ctx.fillText(text, width / 2, height / 2);
 
-  // PNG senden
+  // PNG zurückgeben
   res.setHeader('Content-Type', 'image/png');
   canvas.createPNGStream().pipe(res);
 });
