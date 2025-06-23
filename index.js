@@ -1,11 +1,18 @@
 const express = require('express');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+const publicDir = path.join(__dirname, 'public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+app.use('/public', express.static(publicDir));
 
 // Fette Schriftart registrieren (z.B. OpenSans-Bold.ttf)
 registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
@@ -194,8 +201,18 @@ app.post('/', async (req, res) => {
     });
     ctx.restore();
 
-    res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
+    // Bild speichern
+    const now = new Date();
+    const filename = `img-${now.getTime()}.png`;
+    const savePath = path.join(publicDir, filename);
+
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
 
   } catch (error) {
     console.error('Fehler:', error);
