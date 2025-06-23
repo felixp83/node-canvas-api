@@ -39,7 +39,6 @@ function breakLongWord(ctx, word, maxWidth) {
         parts.push(current + '-');
         current = char;
       } else {
-        // Einzelner Buchstabe ist schon zu breit, trotzdem nehmen
         parts.push(char);
         current = '';
       }
@@ -52,16 +51,15 @@ function breakLongWord(ctx, word, maxWidth) {
 }
 
 // Textumbruch: maximal 2 Zeilen, lange Wörter werden getrennt
-function wrapTextMax2Lines(ctx, text, maxWidth) {
+function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [];
   let currentLine = '';
 
   for (let i = 0; i < words.length; i++) {
     let word = words[i];
-    // Prüfe, ob das Wort zu lang ist
+    // Wort umbrechen, falls zu lang
     if (ctx.measureText(word).width > maxWidth) {
-      // Wort umbrechen
       const broken = breakLongWord(ctx, word, maxWidth);
       for (let j = 0; j < broken.length; j++) {
         if (currentLine.length > 0) {
@@ -69,6 +67,7 @@ function wrapTextMax2Lines(ctx, text, maxWidth) {
           currentLine = '';
         }
         lines.push(broken[j]);
+        if (lines.length === maxLines) return lines;
       }
       continue;
     }
@@ -78,17 +77,10 @@ function wrapTextMax2Lines(ctx, text, maxWidth) {
     } else {
       lines.push(currentLine);
       currentLine = word;
+      if (lines.length === maxLines) return lines;
     }
-    if (lines.length === 2) break; // Maximal 2 Zeilen
   }
-  if (currentLine.length > 0 && lines.length < 2) lines.push(currentLine);
-
-  // Falls nach dem Umbruch mehr als 2 Zeilen, schneide ab und hänge ... an
-  if (lines.length > 2) {
-    lines = [lines[0], lines[1]];
-    // Optional: ... anhängen, falls Text abgeschnitten wurde
-    if (!lines[1].endsWith('...')) lines[1] = lines[1].replace(/-?$/, '...');
-  }
+  if (currentLine.length > 0 && lines.length < maxLines) lines.push(currentLine);
   return lines;
 }
 
@@ -140,17 +132,18 @@ app.post('/', async (req, res) => {
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
     const fontSizes = [128, 96, 64, 48, 32];
-    let chosenFontSize = 32;
-    let lineHeight = 0;
+    let chosenFontSize = fontSizes[fontSizes.length - 1];
     let lines = [];
+    let lineHeight = 0;
+    const maxLines = 2;
 
-    // Wähle die größte Schriftgröße, bei der der Text in maximal 2 Zeilen passt
+    // Wähle die größte Schriftgröße, bei der der Textblock (max. 2 Zeilen) in den Platz passt
     for (const size of fontSizes) {
       ctx.font = `900 ${size}px \"Open Sans\"`;
       lineHeight = size * 1.3;
-      const testLines = wrapTextMax2Lines(ctx, overlayText, maxTextWidth);
+      const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = testLines.length * lineHeight;
-      if (testLines.length <= 2 && totalTextHeight <= maxTextBlockHeight) {
+      if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
         chosenFontSize = size;
         lines = testLines;
         break;
@@ -161,7 +154,7 @@ app.post('/', async (req, res) => {
     if (lines.length === 0) {
       ctx.font = `900 ${fontSizes[fontSizes.length - 1]}px \"Open Sans\"`;
       lineHeight = fontSizes[fontSizes.length - 1] * 1.3;
-      lines = wrapTextMax2Lines(ctx, overlayText, maxTextWidth);
+      lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     }
 
     ctx.font = `900 ${chosenFontSize}px \"Open Sans\"`;
