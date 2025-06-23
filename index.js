@@ -1,35 +1,49 @@
 const express = require('express');
-const { createCanvas } = require('canvas');
+const { createCanvas, loadImage } = require('canvas');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware, um JSON im Body zu parsen
 app.use(express.json());
 
-app.post('/', (req, res) => {
-  const text = req.body.overlay || 'Hello, World!';
+app.post('/', async (req, res) => {
+  const imageUrl = req.body.url;
+  const overlayText = req.body.overlay || 'Hello, World!';
 
-  const width = 800;
-  const height = 400;
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
 
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext('2d');
+  try {
+    // Bild laden von URL
+    const img = await loadImage(imageUrl);
 
-  // Hintergrund
-  ctx.fillStyle = '#222';
-  ctx.fillRect(0, 0, width, height);
+    const width = img.width;
+    const height = img.height;
 
-  // Text
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 40px Sans';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, width / 2, height / 2);
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-  // PNG zurückgeben
-  res.setHeader('Content-Type', 'image/png');
-  canvas.createPNGStream().pipe(res);
+    // Bild auf Canvas zeichnen
+    ctx.drawImage(img, 0, 0, width, height);
+
+    // Overlay Text
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';  // halbtransparenter Hintergrund fürs Overlay
+    ctx.fillRect(0, height - 60, width, 60);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 40px Sans';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(overlayText, width / 2, height - 30);
+
+    // Antwort als PNG
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
+  } catch (error) {
+    console.error('Error loading image:', error);
+    res.status(500).send('Failed to load image from URL');
+  }
 });
 
 app.listen(port, () => {
