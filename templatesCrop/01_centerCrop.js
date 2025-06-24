@@ -3,27 +3,43 @@ const { createCanvas } = require('canvas');
 module.exports = async function centerCrop(img) {
   const targetWidth = 1000;
   const targetHeight = 1500;
+  const targetRatio = targetWidth / targetHeight; // ≈0.6667
 
-  // Berechne Skalierungsfaktor, damit das Bild den Zielbereich komplett füllt (cover)
-  const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+  const imgWidth = img.width;
+  const imgHeight = img.height;
+  const imgRatio = imgWidth / imgHeight;
 
-  // Berechnete neue Bildgröße nach Skalierung
-  const scaledWidth = img.width * scale;
-  const scaledHeight = img.height * scale;
+  let cropWidth, cropHeight;
 
-  // Berechne Startpunkt, um den mittleren Ausschnitt (center crop) zu zeichnen
-  const sx = (scaledWidth - targetWidth) / 2;
-  const sy = (scaledHeight - targetHeight) / 2;
+  if (imgWidth >= targetWidth && imgHeight >= targetHeight) {
+    // Bild groß genug, 1000x1500 zuschneiden
+    cropWidth = targetWidth;
+    cropHeight = targetHeight;
+  } else {
+    // Bild kleiner als 1000x1500, größtmöglichen Bereich mit Seitenverhältnis 2:3 zuschneiden
+    if (imgRatio > targetRatio) {
+      // Bild ist breiter: Höhe behalten, Breite anpassen
+      cropHeight = imgHeight;
+      cropWidth = cropHeight * targetRatio;
+    } else {
+      // Bild ist schmaler oder gleich: Breite behalten, Höhe anpassen
+      cropWidth = imgWidth;
+      cropHeight = cropWidth / targetRatio;
+    }
+  }
 
-  // Canvas mit Zielgröße erstellen
-  const canvas = createCanvas(targetWidth, targetHeight);
+  // Startpunkt für den Zuschnitt (zentriert)
+  const sx = (imgWidth - cropWidth) / 2;
+  const sy = (imgHeight - cropHeight) / 2;
+
+  // Canvas in der Größe des Crop-Bereichs erzeugen (ohne Hochskalieren)
+  const canvas = createCanvas(cropWidth, cropHeight);
   const ctx = canvas.getContext('2d');
 
-  // Zeichne das skalierte Bild auf Canvas mit Offset, sodass mittlerer Bereich ausgeschnitten wird
   ctx.drawImage(
     img,
-    0, 0, img.width, img.height,         // Quelle: komplettes Originalbild
-    -sx, -sy, scaledWidth, scaledHeight  // Ziel: skaliert und verschoben auf Canvas, damit center crop entsteht
+    sx, sy, cropWidth, cropHeight, // Quelle: zugeschnittener Bereich
+    0, 0, cropWidth, cropHeight    // Ziel: ganze Canvas
   );
 
   return canvas;
