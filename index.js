@@ -23,7 +23,7 @@ registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
   weight: 'bold',
 });
 
-// Bestehende Route mit Template1
+// Bestehende Route mit Standard
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -38,7 +38,7 @@ app.post('/', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await template1(img, overlayText, targetWidth, targetHeight);
+    const canvas = await standard(img, overlayText, targetWidth, targetHeight);
 
     const filename = `img-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
