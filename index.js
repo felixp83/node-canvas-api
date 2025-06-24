@@ -23,7 +23,7 @@ registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
   weight: 'bold',
 });
 
-// Bestehende Route mit Standard
+// Route: Standard Template
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -57,7 +57,7 @@ app.post('/', async (req, res) => {
   }
 });
 
-// Neue Route für Center Crop Template
+// Route: Center Crop Template
 app.post('/center-crop', async (req, res) => {
   const imageUrl = req.body.url;
 
