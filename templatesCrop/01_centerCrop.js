@@ -1,44 +1,30 @@
-const { createCanvas, loadImage } = require('canvas');
+const centerCrop = require('./templatesCrop/01_centerCrop');
 
-async function centerCropImage(imageUrl) {
-  const targetWidth = 1000;
-  const targetHeight = 1500;
-  const targetAspect = targetWidth / targetHeight;
+// ...
 
-  const img = await loadImage(imageUrl);
+app.post('/center-crop', async (req, res) => {
+  const imageUrl = req.body.url;
 
-  const sourceWidth = img.width;
-  const sourceHeight = img.height;
-  const sourceAspect = sourceWidth / sourceHeight;
-
-  let sx, sy, sWidth, sHeight;
-
-  if (sourceAspect > targetAspect) {
-    // Bild ist breiter als Ziel → höhe bleibt, breite zuschneiden
-    sHeight = sourceHeight;
-    sWidth = sHeight * targetAspect;
-    sx = (sourceWidth - sWidth) / 2;
-    sy = 0;
-  } else {
-    // Bild ist höher als Ziel → breite bleibt, höhe zuschneiden
-    sWidth = sourceWidth;
-    sHeight = sWidth / targetAspect;
-    sx = 0;
-    sy = (sourceHeight - sHeight) / 2;
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
   }
 
-  const canvas = createCanvas(targetWidth, targetHeight);
-  const ctx = canvas.getContext('2d');
+  try {
+    const canvas = await centerCrop(imageUrl);
 
-  ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+    const filename = `img-crop-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
 
-  // Hier kannst du z.B. das Bild als Buffer zurückgeben
-  return canvas.toBuffer();
-}
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
 
-// Beispiel-Aufruf
-centerCropImage('https://example.com/deinbild.jpg').then(buffer => {
-  // Buffer kann gespeichert oder weiterverarbeitet werden
-  require('fs').writeFileSync('output-cropped.png', buffer);
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
 });
-
