@@ -144,29 +144,25 @@ app.post('/', async (req, res) => {
   try {
     const img = await loadImage(imageUrl);
 
-    const targetWidth = 1000;
-    const targetHeight = 1500;
-    const targetRatio = targetWidth / targetHeight;
-
-    const origWidth = img.width;
-    const origHeight = img.height;
-    const origRatio = origWidth / origHeight;
-
-    let scale = origRatio > targetRatio
-      ? targetHeight / origHeight
-      : targetWidth / origWidth;
-
-    const scaledWidth = Math.ceil(origWidth * scale);
-    const scaledHeight = Math.ceil(origHeight * scale);
+    // Verwende die Originalgröße des Bildes
+    const targetWidth = img.width;
+    const targetHeight = img.height;
 
     const canvas = createCanvas(targetWidth, targetHeight);
     const ctx = canvas.getContext('2d');
+
+    // Hintergrund weiß (optional)
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+    // Bild in Originalgröße einfügen
+    ctx.drawImage(img, 0, 0);
 
     // Vignettierung hinzufügen
     drawVignette(ctx, targetWidth, targetHeight);
 
     // Text vorbereiten
-    const maxTextBlockHeight = targetHeight * 0.25; // noch weiter nach oben!
+    const maxTextBlockHeight = targetHeight * 0.25;
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
     const maxLines = 2;
@@ -180,7 +176,6 @@ app.post('/', async (req, res) => {
       lineHeight = size * 1.3;
       const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = testLines.length * lineHeight;
-      // Prüfe, ob der gesamte Text untergebracht wurde
       const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
       const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
       if (
@@ -194,7 +189,6 @@ app.post('/', async (req, res) => {
       }
     }
 
-    // Falls keine passende Größe gefunden wurde, nimm die kleinste
     if (lines.length === 0) {
       ctx.font = `900 16px \"Open Sans\"`;
       lineHeight = 16 * 1.3;
@@ -209,14 +203,13 @@ app.post('/', async (req, res) => {
     const rectWidth = maxTextWidth + padding * 2;
     const rectHeight = totalTextHeight + padding * 2;
     const rectX = (targetWidth - rectWidth) / 2;
-    // Textbereich deutlich höher rücken (z.B. 180px Abstand zum unteren Rand)
-    const rectY = targetHeight - rectHeight - 160;
+    const rectY = targetHeight - rectHeight - 180;
 
     // Rechteck hinter Text mit abgerundeten Ecken (Radius 45!) und Schatten
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.08)';
     ctx.shadowBlur = 8;
-    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 42);
+    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 45);
     ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
     ctx.fill();
     ctx.restore();
@@ -234,7 +227,7 @@ app.post('/', async (req, res) => {
 
     // URL unterhalb des Textbereichs einfügen (schwarz, fett)
     const urlText = 'www.montessori-helden.de';
-    ctx.font = 'bold 40px \"Open Sans\"';
+    ctx.font = 'bold 18px \"Open Sans\"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.save();
