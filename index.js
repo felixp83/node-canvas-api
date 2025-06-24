@@ -223,13 +223,13 @@ app.post('/', async (req, res) => {
     const rectHeight = totalTextHeight + padding * 2;
     const rectX = (targetWidth - rectWidth) / 2;
     // Textbereich deutlich höher rücken (z.B. 180px Abstand zum unteren Rand)
-    const rectY = targetHeight - rectHeight - 180;
+    const rectY = targetHeight - rectHeight - 160;
 
     // Rechteck hinter Text mit abgerundeten Ecken (Radius 45!) und Schatten
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.08)';
     ctx.shadowBlur = 8;
-    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 45);
+    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 42);
     ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
     ctx.fill();
     ctx.restore();
@@ -247,7 +247,7 @@ app.post('/', async (req, res) => {
 
     // URL unterhalb des Textbereichs einfügen (schwarz, fett)
     const urlText = 'www.montessori-helden.de';
-    ctx.font = 'bold 18px \"Open Sans\"';
+    ctx.font = 'bold 28px \"Open Sans\"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.save();
