@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const template1 = require('./templates/template1');
+const centerCrop = require('./templatesCrop/01_centerCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
   weight: 'bold',
 });
 
+// Bestehende Route mit Template1
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -38,8 +40,36 @@ app.post('/', async (req, res) => {
 
     const canvas = await template1(img, overlayText, targetWidth, targetHeight);
 
-    // Bild speichern
     const filename = `img-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Neue Route für Center Crop Template
+app.post('/crop-center', async (req, res) => {
+  const imageUrl = req.body.url;
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await centerCrop(img);
+
+    const filename = `img-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
