@@ -92,8 +92,9 @@ function wrapText(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
-// Hilfsfunktion für Vignettierung
+// Hilfsfunktion für Vignettierung mit verstärkten Ecken
 function drawVignette(ctx, width, height) {
+  // Zentrale Vignette
   const vignette = ctx.createRadialGradient(
     width / 2, height / 2, Math.min(width, height) * 0.35,
     width / 2, height / 2, Math.max(width, height) * 0.5
@@ -105,6 +106,30 @@ function drawVignette(ctx, width, height) {
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
   ctx.restore();
+
+  // Verstärkte Ecken (10% mehr, also 0.45)
+  const corners = [
+    { x: 0, y: 0 }, // oben links
+    { x: width, y: 0 }, // oben rechts
+    { x: 0, y: height }, // unten links
+    { x: width, y: height } // unten rechts
+  ];
+  const cornerRadius = Math.min(width, height) * 0.35;
+  corners.forEach(corner => {
+    const grad = ctx.createRadialGradient(
+      corner.x, corner.y, 0,
+      corner.x, corner.y, cornerRadius
+    );
+    grad.addColorStop(0, 'rgba(0,0,0,0.18)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(corner.x, corner.y, cornerRadius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  });
 }
 
 app.post('/', async (req, res) => {
