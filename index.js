@@ -92,6 +92,21 @@ function wrapText(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
+// Hilfsfunktion für Vignettierung
+function drawVignette(ctx, width, height) {
+  const vignette = ctx.createRadialGradient(
+    width / 2, height / 2, Math.min(width, height) * 0.35,
+    width / 2, height / 2, Math.max(width, height) * 0.5
+  );
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -134,6 +149,9 @@ app.post('/', async (req, res) => {
       cropX, cropY, targetWidth, targetHeight,
       0, 0, targetWidth, targetHeight
     );
+
+    // Vignettierung hinzufügen
+    drawVignette(ctx, targetWidth, targetHeight);
 
     // Text vorbereiten
     const maxTextBlockHeight = targetHeight * 0.3;
@@ -181,7 +199,7 @@ app.post('/', async (req, res) => {
     const rectX = (targetWidth - rectWidth) / 2;
     const rectY = targetHeight - rectHeight - 20;
 
-    // Rechteck hinter Text mit abgerundeten Ecken und Schatten
+    // Rechteck hinter Text mit abgerundeten Ecken (Radius 45!) und Schatten
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.08)';
     ctx.shadowBlur = 8;
