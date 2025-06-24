@@ -179,7 +179,7 @@ app.post('/', async (req, res) => {
     drawVignette(ctx, targetWidth, targetHeight);
 
     // Text vorbereiten
-    const maxTextBlockHeight = targetHeight * 0.3;
+    const maxTextBlockHeight = targetHeight * 0.25; // noch weiter nach oben!
     const padding = 20;
     const maxTextWidth = targetWidth * 0.8;
     const maxLines = 2;
@@ -222,7 +222,8 @@ app.post('/', async (req, res) => {
     const rectWidth = maxTextWidth + padding * 2;
     const rectHeight = totalTextHeight + padding * 2;
     const rectX = (targetWidth - rectWidth) / 2;
-    const rectY = targetHeight - rectHeight - 20;
+    // Textbereich deutlich höher rücken (z.B. 180px Abstand zum unteren Rand)
+    const rectY = targetHeight - rectHeight - 180;
 
     // Rechteck hinter Text mit abgerundeten Ecken (Radius 45!) und Schatten
     ctx.save();
@@ -242,6 +243,18 @@ app.post('/', async (req, res) => {
       const y = rectY + padding + index * lineHeight;
       ctx.fillText(line, targetWidth / 2, y);
     });
+    ctx.restore();
+
+    // URL unterhalb des Textbereichs einfügen (schwarz, fett)
+    const urlText = 'www.montessori-helden.de';
+    ctx.font = 'bold 18px \"Open Sans\"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,255,255,0.15)';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#000000'; // schwarz
+    ctx.fillText(urlText, targetWidth / 2, rectY + rectHeight + 18);
     ctx.restore();
 
     // Bild speichern
