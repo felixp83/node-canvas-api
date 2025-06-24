@@ -247,7 +247,7 @@ app.post('/', async (req, res) => {
 
     // URL unterhalb des Textbereichs einfügen (schwarz, fett)
     const urlText = 'www.montessori-helden.de';
-    ctx.font = 'bold 28px \"Open Sans\"';
+    ctx.font = 'bold 40px \"Open Sans\"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.save();
