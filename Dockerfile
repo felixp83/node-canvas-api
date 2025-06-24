@@ -1,8 +1,10 @@
 FROM node:20
 
-# Install system dependencies required by node-canvas (inkl. fontconfig)
+# Systemabhängigkeiten für node-canvas und Fontconfig inkl. Fonts
 RUN apt-get update && apt-get install -y \
   fontconfig \
+  fontconfig-config \
+  fonts-dejavu-core \
   libcairo2-dev \
   libpango1.0-dev \
   libjpeg-dev \
@@ -13,6 +15,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm install
 
 COPY . .
