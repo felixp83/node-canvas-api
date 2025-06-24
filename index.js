@@ -58,7 +58,7 @@ app.post('/', async (req, res) => {
 });
 
 // Neue Route für Center Crop Template
-app.post('/crop-center', async (req, res) => {
+app.post('/center-crop', async (req, res) => {
   const imageUrl = req.body.url;
 
   if (!imageUrl) {
