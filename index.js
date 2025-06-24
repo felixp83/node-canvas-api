@@ -3,7 +3,7 @@ const { loadImage, registerFont } = require('canvas');
 const path = require('path');
 const fs = require('fs');
 
-const template1 = require('./templates/01_Standard');
+const standard = require('./templates/01_Standard');
 const centerCrop = require('./templatesCrop/01_centerCrop');
 
 const app = express();
