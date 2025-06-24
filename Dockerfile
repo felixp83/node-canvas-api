@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/fonts && \
     cp /etc/fonts/fonts.conf /etc/fonts/fonts.conf || true
 
-WORKDIR /
+WORKDIR /app
 
 COPY package*.json ./
 RUN npm install
