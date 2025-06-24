@@ -1,6 +1,6 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate1(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
