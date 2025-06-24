@@ -162,19 +162,6 @@ app.post('/', async (req, res) => {
     const canvas = createCanvas(targetWidth, targetHeight);
     const ctx = canvas.getContext('2d');
 
-    const cropX = Math.floor((scaledWidth - targetWidth) / 2);
-    const cropY = Math.floor((scaledHeight - targetHeight) / 2);
-
-    const tempCanvas = createCanvas(scaledWidth, scaledHeight);
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-
-    ctx.drawImage(
-      tempCanvas,
-      cropX, cropY, targetWidth, targetHeight,
-      0, 0, targetWidth, targetHeight
-    );
-
     // Vignettierung hinzufügen
     drawVignette(ctx, targetWidth, targetHeight);
 
