@@ -185,7 +185,7 @@ app.post('/', async (req, res) => {
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.08)';
     ctx.shadowBlur = 8;
-    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 15);
+    roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 25);
     ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
     ctx.fill();
     ctx.restore();
