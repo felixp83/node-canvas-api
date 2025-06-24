@@ -1,30 +1,22 @@
-const centerCrop = require('./templatesCrop/01_centerCrop');
+const { createCanvas } = require('canvas');
 
-// ...
+module.exports = async function centerCrop(img) {
+  // Zielgröße (kannst du anpassen)
+  const targetWidth = 500;
+  const targetHeight = 500;
 
-app.post('/center-crop', async (req, res) => {
-  const imageUrl = req.body.url;
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
 
-  if (!imageUrl) {
-    return res.status(400).send('Missing "url" in request body');
-  }
+  // Berechne Crop-Startpunkt (zentriert)
+  const sx = Math.max(0, (img.width - targetWidth) / 2);
+  const sy = Math.max(0, (img.height - targetHeight) / 2);
 
-  try {
-    const canvas = await centerCrop(imageUrl);
+  ctx.drawImage(
+    img,
+    sx, sy, targetWidth, targetHeight, // Quelle (Crop-Bereich)
+    0, 0, targetWidth, targetHeight    // Ziel (Canvas)
+  );
 
-    const filename = `img-crop-${Date.now()}.png`;
-    const savePath = path.join(publicDir, filename);
-    const out = fs.createWriteStream(savePath);
-    const stream = canvas.createPNGStream();
-
-    stream.pipe(out);
-    out.on('finish', () => {
-      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
-      res.json({ imgUrl });
-    });
-
-  } catch (error) {
-    console.error('Fehler:', error);
-    res.status(500).send('Fehler beim Verarbeiten des Bildes');
-  }
-});
+  return canvas;
+};
