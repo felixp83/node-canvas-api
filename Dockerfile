@@ -16,6 +16,8 @@ RUN mkdir -p /etc/fonts && \
 
 WORKDIR /app
 
+COPY . /app
+
 COPY package*.json ./
 RUN npm install
 
