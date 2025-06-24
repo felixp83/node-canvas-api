@@ -2,8 +2,8 @@ const { createCanvas } = require('canvas');
 
 module.exports = async function centerCrop(img) {
   // Zielgröße (kannst du anpassen)
-  const targetWidth = 500;
-  const targetHeight = 500;
+  const targetWidth = 1000;
+  const targetHeight = 1500;
 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
