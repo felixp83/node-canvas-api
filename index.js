@@ -6,7 +6,7 @@ const fs = require('fs');
 const standard = require('./templates/01_Standard');
 const centerCrop = require('./templatesCrop/01_centerCrop');
 const bottomleftCrop = require('./templatesCrop/02_bottomleftCrop');
-const bottomleftCrop = require('./templatesCrop/03_bottomrightCrop');
+const bottomrightCrop = require('./templatesCrop/03_bottomrightCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
