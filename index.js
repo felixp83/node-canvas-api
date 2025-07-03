@@ -8,6 +8,7 @@ const centerCrop = require('./templatesCrop/01_centerCrop');
 const bottomleftCrop = require('./templatesCrop/02_bottomleftCrop');
 const bottomrightCrop = require('./templatesCrop/03_bottomrightCrop');
 const topleftCrop = require('./templatesCrop/04_topleftCrop');
+const toprightCrop = require('./templatesCrop/05_toprightCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
