@@ -6,6 +6,7 @@ const fs = require('fs');
 const standard = require('./templates/01_Standard');
 const centerCrop = require('./templatesCrop/01_centerCrop');
 const bottomleftCrop = require('./templatesCrop/02_bottomleftCrop');
+const bottomleftCrop = require('./templatesCrop/03_bottomrightCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -115,6 +116,36 @@ app.post('/bottom-left-crop', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
+// Route: Bottom Right Crop Template
+app.post('/bottom-right-crop', async (req, res) => {
+  const imageUrl = req.body.url;
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await bottomrightCrop(img);
+
+    const filename = `img-bottomright-crop-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
 
 
 app.listen(port, () => {
