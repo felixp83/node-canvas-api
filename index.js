@@ -176,6 +176,36 @@ app.post('/top-left-crop', async (req, res) => {
   }
 });
 
+// Route: Top Right Crop Template
+
+app.post('/top-right-crop', async (req, res) => {
+  const imageUrl = req.body.url;
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await toprightCrop(img);
+
+    const filename = `img-topright-crop-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
 
 
 app.listen(port, () => {
