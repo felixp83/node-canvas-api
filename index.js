@@ -7,6 +7,7 @@ const standard = require('./templates/01_Standard');
 const centerCrop = require('./templatesCrop/01_centerCrop');
 const bottomleftCrop = require('./templatesCrop/02_bottomleftCrop');
 const bottomrightCrop = require('./templatesCrop/03_bottomrightCrop');
+const topleftCrop = require('./templatesCrop/04_topleftCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -130,6 +131,35 @@ app.post('/bottom-right-crop', async (req, res) => {
     const canvas = await bottomrightCrop(img);
 
     const filename = `img-bottomright-crop-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Route: Top Left Crop Template
+app.post('/top-left-crop', async (req, res) => {
+  const imageUrl = req.body.url;
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await topleftCrop(img);
+
+    const filename = `img-topleft-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
