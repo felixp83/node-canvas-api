@@ -46,22 +46,34 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
+  // === URL dynamisch vorbereiten ===
+  const urlText = "www.montessori-helden.de";
+  let urlFontSize = 16;
+  let urlLineHeight = 0;
+  const maxUrlWidth = maxTextWidth;
 
+  for (let size = 32; size >= 12; size -= 2) {
+    ctx.font = `bold ${size}px "Open Sans"`;
+    const metrics = ctx.measureText(urlText);
+    if (metrics.width <= maxUrlWidth) {
+      urlFontSize = size;
+      urlLineHeight = size * 1.3;
+      break;
+    }
+  }
+  if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
+
+  // === Box-Berechnung ===
+  ctx.font = `900 ${chosenFontSize}px "Open Sans"`; // zurück für Messung
   const totalTextHeight = lines.length * lineHeight;
-  const textBlockWidth = Math.max(
-    ...lines.map(line => ctx.measureText(line).width)
-  );
-  const rectWidth = textBlockWidth + padding * 2;
-  const rectHeight = totalTextHeight + padding * 2 + 30;  // 30px extra für URL
+  const rectWidth = maxTextWidth + padding * 2;
+  const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + padding;
   const verticalPositionFactor = 0.8;
   const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
-  const cornerRadius = 36; // vorher 45, jetzt 20% kleiner
+  const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
@@ -70,29 +82,27 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fill();
   ctx.restore();
 
-  // === Text zeichnen ===
+  // === Text zeichnen (ohne Schatten) ===
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.25)';
-  ctx.shadowBlur = 4;
   ctx.fillStyle = '#333';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
   lines.forEach((line, index) => {
     const y = rectY + padding + index * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
   ctx.restore();
 
-  // === URL innerhalb der Box zeichnen ===
-  ctx.font = 'bold 18px "Open Sans"';
+  // === URL innerhalb der Box (ohne Schatten) ===
+  ctx.save();
+  ctx.fillStyle = '#000';
+  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.15)';
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#000';
   ctx.fillText(
-    'www.montessori-helden.de',
+    urlText,
     targetWidth / 2,
-    rectY + rectHeight - padding - 18 // 18px font size
+    rectY + padding + totalTextHeight + padding // Abstand wie bei lineHeight
   );
   ctx.restore();
 
