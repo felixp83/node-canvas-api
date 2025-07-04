@@ -83,7 +83,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.restore();
 
   // === Dünne, leicht wellige weiße Linie als Kontur der Farbfläche, eingerückt ===
-  const lineInset = 5; // Einrückung innen
+  const lineInset = 15; // Einrückung innen
   const waveAmplitude = 3;
   const waveLength = 20;
 
