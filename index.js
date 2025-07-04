@@ -9,7 +9,8 @@ const bottomleftCrop = require('./templatesCrop/02_bottomleftCrop');
 const bottomrightCrop = require('./templatesCrop/03_bottomrightCrop');
 const topleftCrop = require('./templatesCrop/04_topleftCrop');
 const toprightCrop = require('./templatesCrop/05_toprightCrop');
-const verspielt = require('./templates/02_Verspielt'); // neu
+const verspielt = require('./templates/02_Verspielt');
+const outline = require('./templates/03_outline');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -240,6 +241,40 @@ app.post('/verspielt', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+// Neue Route: Outline Template
+app.post('/outline', async (req, res) => {
+  const imageUrl = req.body.url;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await outline(img, overlayText, targetWidth, targetHeight);
+
+    const filename = `img-outline-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
