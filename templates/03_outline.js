@@ -12,10 +12,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
   // === Passepartout-Rahmen (weiße Linie eingerückt) ===
-  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.04;  // vorher 2%, jetzt 4%
+  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.04;  // 4% Abstand
   ctx.save();
   ctx.strokeStyle = 'white';
-  ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.005; // unverändert
+  ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.005;
   ctx.strokeRect(
     passepartoutInset,
     passepartoutInset,
@@ -75,10 +75,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const urlText = "www.montessori-helden.de";
   const urlFontSize = Math.min(22, chosenFontSize * 0.4);
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+
+  const urlY = bannerY + bannerHeight - bannerHeight * 0.15; // 15% Abstand vom unteren Rand des Banners
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    bannerY + bannerHeight * 0.9 // vorher 0.8, jetzt 0.9 (mehr Abstand)
+    urlY
   );
 
   return canvas;
