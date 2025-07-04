@@ -55,20 +55,17 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ...lines.map(line => ctx.measureText(line).width)
   );
   const rectWidth = textBlockWidth + padding * 2;
-  const rectHeight = totalTextHeight + padding * 2;
-
-  // === Position im unteren Bereich steuerbar per Faktor ===
-  // Beispiel: verticalPositionFactor = 0.8 => 80% der Höhe (im unteren Drittel)
+  const rectHeight = totalTextHeight + padding * 2 + 30;  // 30px extra für URL
   const verticalPositionFactor = 0.8;
   const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
-
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
+  const cornerRadius = 36; // vorher 45, jetzt 20% kleiner
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
-  roundRect(ctx, rectX, rectY, rectWidth, rectHeight, 45);
+  roundRect(ctx, rectX, rectY, rectWidth, rectHeight, cornerRadius);
   ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
   ctx.fill();
   ctx.restore();
@@ -84,15 +81,19 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
   ctx.restore();
 
-  // === URL einfügen ===
+  // === URL innerhalb der Box zeichnen ===
   ctx.font = 'bold 18px "Open Sans"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.save();
-  ctx.shadowColor = 'rgba(255,255,255,0.15)';
+  ctx.shadowColor = 'rgba(0,0,0,0.15)';
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#000';
-  ctx.fillText('www.montessori-helden.de', targetWidth / 2, rectY + rectHeight + 18);
+  ctx.fillText(
+    'www.montessori-helden.de',
+    targetWidth / 2,
+    rectY + rectHeight - padding - 18 // 18px font size
+  );
   ctx.restore();
 
   return canvas;
