@@ -6,8 +6,8 @@ module.exports = async function centerCropWithDynamicZoom(img) {
   const targetRatio = targetWidth / targetHeight; // ≈0.6667
 
   // Dynamischer Zoomfaktor zwischen 1.05 (105%) und 1.15 (115%)
-  const minZoom = 1.05;
-  const maxZoom = 1.15;
+  const minZoom = 1.10;
+  const maxZoom = 1.20;
   const zoomFactor = Math.random() * (maxZoom - minZoom) + minZoom;
 
   const imgWidth = img.width;
