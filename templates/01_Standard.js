@@ -67,19 +67,22 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === Box-Berechnung ===
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`; // zurück für Messung
   const totalTextHeight = lines.length * lineHeight;
+  // URL Abstand nach oben wird 40% weniger, deshalb padding wird 60% von vorher für URL-Abstand genutzt
+  const urlPaddingTop = padding * 0.6;
+
   const rectWidth = maxTextWidth + padding * 2;
-  const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + padding;
+  const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
   const verticalPositionFactor = 0.8;
   const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Hintergrundbox mit 10% Transparenz ===
+  // === Hintergrundbox mit 90% Deckkraft (alpha=0.9) ===
   const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
   roundRect(ctx, rectX, rectY, rectWidth, rectHeight, cornerRadius);
-  ctx.fillStyle = 'rgba(173, 216, 230, 0.1)';
+  ctx.fillStyle = 'rgba(173, 216, 230, 0.9)';
   ctx.fill();
   ctx.restore();
 
@@ -103,7 +106,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + padding // Abstand analog zu Haupttext
+    rectY + padding + totalTextHeight + urlPaddingTop // neuer Abstand zum Haupttext
   );
   ctx.restore();
 
