@@ -1,138 +1,50 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function outlineTemplate(image, overlayText, targetWidth, targetHeight) {
+  // Canvas anlegen
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Weißer Hintergrund ===
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, targetWidth, targetHeight);
+  // Bild zeichnen
+  ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
 
-  // === Bild einzeichnen ===
-  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+  // Passepartout (weiße Linie)
+  const outlineWidth = Math.max(targetWidth, targetHeight) * 0.01; // 1% der längsten Seite
+  const outlineMargin = Math.max(targetWidth, targetHeight) * 0.02; // 2% Abstand vom Rand
 
-  // === Passepartout-Rahmen (weiße Linie eingerückt) ===
-  const passepartoutInset = 20; // wie breit eingerückt
-  ctx.save();
   ctx.strokeStyle = 'white';
-  ctx.lineWidth = 5;
+  ctx.lineWidth = outlineWidth;
   ctx.strokeRect(
-    passepartoutInset,
-    passepartoutInset,
-    targetWidth - passepartoutInset * 2,
-    targetHeight - passepartoutInset * 2
+    outlineMargin,
+    outlineMargin,
+    targetWidth - 2 * outlineMargin,
+    targetHeight - 2 * outlineMargin
   );
-  ctx.restore();
 
-  // === Farbfläche (z.B. orange) über gesamte Breite ===
-  const bannerHeight = targetHeight * 0.18;
-  const bannerY = targetHeight * 0.3; // leicht oberes Drittel
-  ctx.save();
-  ctx.fillStyle = '#f5a623'; // Orange
+  // Farbfläche für den Text
+  const boxHeight = targetHeight * 0.08;         // 8% der Höhe
+  const boxMarginBottom = targetHeight * 0.03;   // 3% Abstand vom unteren Bildrand
+  const boxPaddingX = targetWidth * 0.03;        // 3% seitlicher Innenabstand
+
+  ctx.fillStyle = 'black';
   ctx.fillRect(
-    0,
-    bannerY,
-    targetWidth,
-    bannerHeight
+    boxPaddingX,
+    targetHeight - boxHeight - boxMarginBottom,
+    targetWidth - 2 * boxPaddingX,
+    boxHeight
   );
-  ctx.restore();
 
-  // === Text innerhalb der Farbfläche ===
-  const maxTextWidth = targetWidth * 0.9;
-  let chosenFontSize = 16;
-  let lines = [];
-  let lineHeight = 0;
-
-  for (let size = 128; size >= 16; size -= 2) {
-    ctx.font = `900 ${size}px "Open Sans"`;
-    lineHeight = size * 1.2;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, 2);
-    const totalTextHeight = testLines.length * lineHeight;
-    if (totalTextHeight <= bannerHeight * 0.7) {
-      chosenFontSize = size;
-      lines = testLines;
-      break;
-    }
-  }
-
-  if (lines.length === 0) {
-    ctx.font = `900 16px "Open Sans"`;
-    lineHeight = 16 * 1.2;
-    lines = wrapText(ctx, overlayText, maxTextWidth, 2);
-  }
-
+  // Text
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
+  ctx.font = `${Math.floor(boxHeight * 0.4)}px 'Open Sans'`; // 40% der Boxhöhe als Schriftgröße
 
-  lines.forEach((line, index) => {
-    const y = bannerY + bannerHeight * 0.25 + index * lineHeight;
-    ctx.fillText(line, targetWidth / 2, y);
-  });
-
-  // === URL innerhalb der Farbfläche ===
-  const urlText = "www.montessori-helden.de";
-  const urlFontSize = Math.min(22, chosenFontSize * 0.4);
-  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   ctx.fillText(
-    urlText,
+    overlayText,
     targetWidth / 2,
-    bannerY + bannerHeight * 0.8
+    targetHeight - boxHeight / 2 - boxMarginBottom
   );
 
   return canvas;
 };
-
-// === Hilfsfunktionen ===
-function breakLongWord(ctx, word, maxWidth) {
-  let parts = [], current = '';
-  for (let char of word) {
-    const test = current + char;
-    if (ctx.measureText(test).width > maxWidth) {
-      if (current.length > 0) {
-        parts.push(current + '-');
-        current = char;
-      } else {
-        parts.push(char);
-        current = '';
-      }
-    } else {
-      current = test;
-    }
-  }
-  if (current.length > 0) parts.push(current);
-  return parts;
-}
-
-function wrapText(ctx, text, maxWidth, maxLines) {
-  const words = text.split(' ');
-  let lines = [], currentLine = '';
-
-  for (let word of words) {
-    if (ctx.measureText(word).width > maxWidth) {
-      const broken = breakLongWord(ctx, word, maxWidth);
-      for (let part of broken) {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = '';
-        }
-        lines.push(part);
-        if (lines.length === maxLines) return lines;
-      }
-      continue;
-    }
-
-    const testLine = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
-      currentLine = testLine;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-      if (lines.length === maxLines) return lines;
-    }
-  }
-
-  if (currentLine && lines.length < maxLines) lines.push(currentLine);
-  return lines;
-}
