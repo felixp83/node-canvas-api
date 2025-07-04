@@ -51,8 +51,9 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   let urlFontSize = 16;
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
+  const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
 
-  for (let size = 32; size >= 12; size -= 2) {
+  for (let size = maxUrlFontSize; size >= 12; size -= 1) {
     ctx.font = `bold ${size}px "Open Sans"`;
     const metrics = ctx.measureText(urlText);
     if (metrics.width <= maxUrlWidth) {
@@ -72,13 +73,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Hintergrundbox ===
+  // === Hintergrundbox mit 10% Transparenz ===
   const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
   roundRect(ctx, rectX, rectY, rectWidth, rectHeight, cornerRadius);
-  ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
+  ctx.fillStyle = 'rgba(173, 216, 230, 0.1)';
   ctx.fill();
   ctx.restore();
 
@@ -93,16 +94,16 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (ohne Schatten) ===
+  // === URL innerhalb der Box (ohne Schatten, gleiche Farbe wie Haupttext) ===
   ctx.save();
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = '#333';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + padding // Abstand wie bei lineHeight
+    rectY + padding + totalTextHeight + padding // Abstand analog zu Haupttext
   );
   ctx.restore();
 
