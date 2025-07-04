@@ -28,13 +28,14 @@ module.exports = async function bottomRightCrop(img) {
   const sx = imgWidth - cropWidth;
   const sy = imgHeight - cropHeight;
 
-  const canvas = createCanvas(cropWidth, cropHeight);
+  // Canvas auf Zielgröße 1000x1500 setzen (Hochskalierung hier)
+  const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
   ctx.drawImage(
     img,
     sx, sy, cropWidth, cropHeight,  // Quelle
-    0, 0, cropWidth, cropHeight     // Ziel
+    0, 0, targetWidth, targetHeight  // Ziel (hochskalieren auf 1000x1500)
   );
 
   return canvas;
