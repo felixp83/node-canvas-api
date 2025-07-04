@@ -28,13 +28,14 @@ module.exports = async function toprightCrop(img) {
   const sx = imgWidth - cropWidth;
   const sy = 0;
 
-  const canvas = createCanvas(cropWidth, cropHeight);
+  // Canvas in Zielgröße (1000x1500) für Hochskalierung
+  const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
   ctx.drawImage(
     img,
-    sx, sy, cropWidth, cropHeight, // Quelle
-    0, 0, cropWidth, cropHeight    // Ziel
+    sx, sy, cropWidth, cropHeight,  // Quelle
+    0, 0, targetWidth, targetHeight // Ziel (hochskalieren)
   );
 
   return canvas;
