@@ -12,10 +12,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
   // === Passepartout-Rahmen (weiße Linie eingerückt) ===
-  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.02;  // vorher 20px, jetzt 2%  
+  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.04;  // vorher 2%, jetzt 4%
   ctx.save();
   ctx.strokeStyle = 'white';
-  ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.005; // vorher 5px, jetzt 0.5%  
+  ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.005; // unverändert
   ctx.strokeRect(
     passepartoutInset,
     passepartoutInset,
@@ -25,10 +25,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.restore();
 
   // === Farbfläche (z.B. orange) über gesamte Breite ===
-  const bannerHeight = targetHeight * 0.18; // unverändert
-  const bannerY = targetHeight * 0.3;       // leicht oberes Drittel
+  const bannerHeight = targetHeight * 0.18;
+  const bannerY = targetHeight * 0.3;
   ctx.save();
-  ctx.fillStyle = '#f5a623'; // Orange
+  ctx.fillStyle = '#f5a623';
   ctx.fillRect(
     0,
     bannerY,
@@ -78,7 +78,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    bannerY + bannerHeight * 0.8
+    bannerY + bannerHeight * 0.9 // vorher 0.8, jetzt 0.9 (mehr Abstand)
   );
 
   return canvas;
