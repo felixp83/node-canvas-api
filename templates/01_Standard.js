@@ -29,7 +29,11 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     const totalTextHeight = testLines.length * lineHeight;
     const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
     const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
-    if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight && joined === original) {
+    if (
+      testLines.length <= maxLines &&
+      totalTextHeight <= maxTextBlockHeight &&
+      joined === original
+    ) {
       chosenFontSize = size;
       lines = testLines;
       break;
@@ -46,20 +50,19 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
-  // dynamisch berechnete Hintergrundbox
   const totalTextHeight = lines.length * lineHeight;
-
-  // tatsächliche breiteste Zeile messen
-  let maxLineWidth = 0;
-  for (const line of lines) {
-    const width = ctx.measureText(line).width;
-    if (width > maxLineWidth) maxLineWidth = width;
-  }
-
-  const rectWidth = maxLineWidth + padding * 2;
+  const textBlockWidth = Math.max(
+    ...lines.map(line => ctx.measureText(line).width)
+  );
+  const rectWidth = textBlockWidth + padding * 2;
   const rectHeight = totalTextHeight + padding * 2;
+
+  // === Position im unteren Bereich steuerbar per Faktor ===
+  // Beispiel: verticalPositionFactor = 0.8 => 80% der Höhe (im unteren Drittel)
+  const verticalPositionFactor = 0.8;
+  const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
+
   const rectX = (targetWidth - rectWidth) / 2;
-  const rectY = targetHeight - rectHeight - 180;
 
   // === Hintergrundbox ===
   ctx.save();
