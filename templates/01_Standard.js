@@ -1,6 +1,12 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function generateTemplate(
+  img,
+  overlayText,
+  targetWidth,
+  targetHeight,
+  website
+) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -47,7 +53,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   // === URL dynamisch vorbereiten ===
-  const urlText = "www.montessori-helden.de";
+  const urlText = website || "www.montessori-helden.de";
   let urlFontSize = 16;
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
@@ -67,7 +73,6 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === Box-Berechnung ===
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`; // zurück für Messung
   const totalTextHeight = lines.length * lineHeight;
-  // URL Abstand nach oben wird 40% weniger, deshalb padding wird 60% von vorher für URL-Abstand genutzt
   const urlPaddingTop = padding * 0.6;
 
   const rectWidth = maxTextWidth + padding * 2;
@@ -106,7 +111,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + urlPaddingTop // neuer Abstand zum Haupttext
+    rectY + padding + totalTextHeight + urlPaddingTop
   );
   ctx.restore();
 
