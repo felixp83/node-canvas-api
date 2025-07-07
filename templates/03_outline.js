@@ -72,7 +72,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
 
   // === URL innerhalb der Farbfläche ===
-  const urlText = website || "www.montessori-helden.de";
+  const urlText = website || "Webseite fehlt!";
   const urlFontSize = Math.min(22, chosenFontSize * 0.4);
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
 
