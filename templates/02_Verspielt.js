@@ -1,6 +1,6 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -47,7 +47,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   // === URL dynamisch vorbereiten ===
-  const urlText = "www.montessori-helden.de";
+  const urlText = website || "Webseite fehlt";
   let urlFontSize = 16;
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
