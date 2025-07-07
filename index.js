@@ -34,8 +34,11 @@ registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
 // Route: Standard Template
 app.post('/', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
   overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -46,7 +49,7 @@ app.post('/', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await standard(img, overlayText, targetWidth, targetHeight);
+    const canvas = await standard(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -68,6 +71,9 @@ app.post('/', async (req, res) => {
 // Route: Center Crop Template
 app.post('/center-crop', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -75,7 +81,7 @@ app.post('/center-crop', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await centerCrop(img);
+    const canvas = await centerCrop(img, website);
 
     const filename = `img-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -97,6 +103,9 @@ app.post('/center-crop', async (req, res) => {
 // Route: Bottom Left Crop Template
 app.post('/bottom-left-crop', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -104,7 +113,7 @@ app.post('/bottom-left-crop', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await bottomleftCrop(img);
+    const canvas = await bottomleftCrop(img, website);
 
     const filename = `img-bottomleft-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -126,6 +135,9 @@ app.post('/bottom-left-crop', async (req, res) => {
 // Route: Bottom Right Crop Template
 app.post('/bottom-right-crop', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -133,7 +145,7 @@ app.post('/bottom-right-crop', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await bottomrightCrop(img);
+    const canvas = await bottomrightCrop(img, website);
 
     const filename = `img-bottomright-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -155,6 +167,9 @@ app.post('/bottom-right-crop', async (req, res) => {
 // Route: Top Left Crop Template
 app.post('/top-left-crop', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -162,7 +177,7 @@ app.post('/top-left-crop', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await topleftCrop(img);
+    const canvas = await topleftCrop(img, website);
 
     const filename = `img-topleft-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -184,6 +199,9 @@ app.post('/top-left-crop', async (req, res) => {
 // Route: Top Right Crop Template
 app.post('/top-right-crop', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -191,7 +209,7 @@ app.post('/top-right-crop', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await toprightCrop(img);
+    const canvas = await toprightCrop(img, website);
 
     const filename = `img-topright-crop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -213,8 +231,11 @@ app.post('/top-right-crop', async (req, res) => {
 // Neue Route: Verspielt Template
 app.post('/verspielt', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
   overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -225,7 +246,7 @@ app.post('/verspielt', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await verspielt(img, overlayText, targetWidth, targetHeight);
+    const canvas = await verspielt(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-verspielt-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -243,11 +264,15 @@ app.post('/verspielt', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
 // Neue Route: Outline Template
 app.post('/outline', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
   overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -258,7 +283,7 @@ app.post('/outline', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await outline(img, overlayText, targetWidth, targetHeight);
+    const canvas = await outline(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-outline-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -276,11 +301,15 @@ app.post('/outline', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
 // Neue Route: CenterCropZoom Template
 app.post('/center-crop-zoom', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
   overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -291,7 +320,7 @@ app.post('/center-crop-zoom', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await centerCropZoom(img, overlayText, targetWidth, targetHeight);
+    const canvas = await centerCropZoom(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-center-crop-zoom-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -309,11 +338,15 @@ app.post('/center-crop-zoom', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
 // Neue Route: Quadrat Template
 app.post('/quadrat', async (req, res) => {
   const imageUrl = req.body.url;
+  const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
   overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
 
   if (!imageUrl) {
     return res.status(400).send('Missing "url" in request body');
@@ -324,7 +357,7 @@ app.post('/quadrat', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight);
+    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-quadrat-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
