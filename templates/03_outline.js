@@ -1,6 +1,6 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -72,7 +72,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
 
   // === URL innerhalb der Farbfläche ===
-  const urlText = "www.montessori-helden.de";
+  const urlText = website || "www.montessori-helden.de";
   const urlFontSize = Math.min(22, chosenFontSize * 0.4);
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
 
