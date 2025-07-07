@@ -53,7 +53,7 @@ module.exports = async function generateTemplate(
   }
 
   // === URL dynamisch vorbereiten ===
-  const urlText = website || "www.montessori-helden.de";
+  const urlText = website || "Webseite fehlt";
   let urlFontSize = 16;
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
