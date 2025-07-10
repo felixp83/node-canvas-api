@@ -25,16 +25,29 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const dy = 0;
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === Textpositionierung ===
-  const topY = squareSize;
+  // === Footer-Abstand (für URL und Button) ===
   const footerPadding = targetHeight * 0.05;
-  const urlHeight = 60;
+  const urlFontSize = 32;
+  const urlText = website || "www.montessori-helden.de";
 
-  const baseButtonHeight = 120;
-  const buttonHeight = baseButtonHeight * 0.9 * 0.85; // -10% & -15%
-  const buttonYOffset = buttonHeight * 0.1 + 10;       // Abstand zum Text +10px zusätzlich
+  // === Button-Parameter ===
+  const buttonBaseHeight = 120;
+  const buttonHeight = buttonBaseHeight * 0.9 * 0.85 * 0.9; // bisherige Reduktion + weitere -10%
+  const buttonText = "JETZT BESUCHEN";
+  const buttonFontSize = 28;
 
-  const bottomY = targetHeight - footerPadding - urlHeight - buttonHeight - buttonYOffset;
+  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
+  const buttonTextWidth = ctx.measureText(buttonText).width;
+  const paddingX = 40;
+  const baseButtonWidth = buttonTextWidth + paddingX * 2;
+  const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15; // bisher +10% +20% +15%
+
+  const buttonX = (targetWidth - buttonWidth) / 2;
+  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight;
+
+  // === Haupttext dynamisch in freiem Raum ===
+  const topY = squareSize;
+  const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
   const overlayMaxWidth = targetWidth * 0.9;
@@ -64,36 +77,21 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
 
-  // === Button unterhalb des Textes ===
-  const buttonText = "JETZT BESUCHEN";
-  const buttonFontSize = 28;
-  const paddingX = 40;
-  const paddingY = 20;
-
-  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
-  const buttonTextWidth = ctx.measureText(buttonText).width;
-
-  const baseButtonWidth = buttonTextWidth + paddingX * 2;
-  const buttonWidth = baseButtonWidth * 1.1 * 1.2; // +10%, +20%
-  const buttonX = (targetWidth - buttonWidth) / 2;
-  const buttonY = textStartY + textBlockHeight + buttonYOffset;
-
+  // === Button zeichnen ===
   ctx.fillStyle = '#5b4636';
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 14, true, false);
 
   ctx.fillStyle = 'white';
+  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL ganz unten ===
-  const urlText = website || "www.montessori-helden.de";
-  const footerFontSize = 32;
-
-  ctx.font = `normal ${footerFontSize}px "Open Sans"`;
+  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-
   ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding);
 
   return canvas;
