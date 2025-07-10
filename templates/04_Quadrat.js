@@ -26,11 +26,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
   // === Footer-Abstand (für URL und Button) ===
-  // Hier definieren wir den Abstand, wieviel wir die URL um 10% nach unten verschieben wollen
-  const moveDown = targetHeight * 0.10;
-
-  // Ursprünglicher footerPadding (war 5%)
-  const footerPadding = targetHeight * 0.05;
+  const footerPadding = targetHeight * 0.2;
   const urlFontSize = 32;
   const urlText = website || "www.montessori-helden.de";
 
@@ -40,7 +36,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonText = "JETZT BESUCHEN";
   const buttonFontSize = 28;
 
-  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
+  ctx.font = normal ${buttonFontSize}px "Open Sans";
   const buttonTextWidth = ctx.measureText(buttonText).width;
   const paddingX = 40;
   const baseButtonWidth = buttonTextWidth + paddingX * 2;
@@ -48,15 +44,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   const buttonX = (targetWidth - buttonWidth) / 2;
 
-  // Neue Position der URL: 10% nach unten von der unteren Kante (targetHeight)
-  const urlY = targetHeight - moveDown;
+  // Neuer Abstand zwischen URL und Button
+  const urlToButtonSpacing = footerPadding;
 
-  // Abstand zwischen URL und unterer Kante (nach Verschiebung)
-  const distanceUrlToBottom = targetHeight - urlY;
-
-  // Abstand Button zu URL = Abstand URL zu unterer Kante
-  // Also Button Y ist URL Y minus Abstand zwischen URL und unterer Kante minus Button Höhe
-  const buttonY = urlY - distanceUrlToBottom - buttonHeight;
+  // URL ist footerPadding vom unteren Rand
+  // Button ist urlToButtonSpacing + urlFontSize + buttonHeight über der unteren Kante
+  const buttonY = targetHeight - footerPadding - urlFontSize - urlToButtonSpacing - buttonHeight;
 
   // === Haupttext dynamisch in freiem Raum ===
   const topY = squareSize;
@@ -69,7 +62,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   let lineHeight = 0;
 
   for (let size = 60; size >= 20; size -= 2) {
-    ctx.font = `900 ${size}px "Open Sans"`;
+    ctx.font = 900 ${size}px "Open Sans";
     lineHeight = size * 1.2;
     lines = wrapText(ctx, overlayText, overlayMaxWidth, 3);
     if (lines.length * lineHeight <= textAreaHeight) {
@@ -81,7 +74,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const textBlockHeight = lines.length * lineHeight;
   const textStartY = topY + (textAreaHeight - textBlockHeight) / 2;
 
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
+  ctx.font = 900 ${chosenFontSize}px "Open Sans";
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -95,17 +88,17 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 14, true, false);
 
   ctx.fillStyle = 'white';
-  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
+  ctx.font = normal ${buttonFontSize}px "Open Sans";
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === URL ganz unten (neu positioniert) ===
-  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
+  // === URL ganz unten ===
+  ctx.font = normal ${urlFontSize}px "Open Sans";
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(urlText, targetWidth / 2, urlY);
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding);
 
   return canvas;
 };
