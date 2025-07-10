@@ -26,7 +26,8 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
   // === Footer-Abstand (für URL und Button) ===
-  const footerPadding = targetHeight * 0.05;
+  // URL soll 10% von der Höhe nach unten rücken (näher zur unteren Kante)
+  const footerPadding = targetHeight * 0.10; // Abstand URL zur unteren Kante
   const urlFontSize = 32;
   const urlText = website || "www.montessori-helden.de";
 
@@ -44,16 +45,18 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   const buttonX = (targetWidth - buttonWidth) / 2;
 
-  // Neuer Abstand zwischen URL und Button
+  // Abstand zwischen URL und Button = footerPadding (gleicher Abstand wie zur unteren Kante)
   const urlToButtonSpacing = footerPadding;
 
-  // URL ist footerPadding vom unteren Rand
-  // Button ist urlToButtonSpacing + urlFontSize + buttonHeight über der unteren Kante
-  const buttonY = targetHeight - footerPadding - urlFontSize - urlToButtonSpacing - buttonHeight;
+  // URL Y-Position
+  const urlY = targetHeight - footerPadding;
+
+  // Button Y-Position: urlY minus Abstand (urlToButtonSpacing), minus URL Fontgröße, minus Buttonhöhe
+  const buttonY = urlY - urlToButtonSpacing - urlFontSize - buttonHeight;
 
   // === Haupttext dynamisch in freiem Raum ===
   const topY = squareSize;
-  const bottomY = buttonY - 20; // 20px Abstand zum Button
+  const bottomY = buttonY - 20; // 20px Abstand oberhalb Button
   const textAreaHeight = bottomY - topY;
 
   const overlayMaxWidth = targetWidth * 0.9;
@@ -98,7 +101,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding);
+  ctx.fillText(urlText, targetWidth / 2, urlY);
 
   return canvas;
 };
