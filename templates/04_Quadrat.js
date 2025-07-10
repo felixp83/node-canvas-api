@@ -43,10 +43,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15; // bisher +10% +20% +15%
 
   const buttonX = (targetWidth - buttonWidth) / 2;
-  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 75; // +75 px Verschiebung
+  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 50; // +50 px Verschiebung
 
   // === Haupttext dynamisch in freiem Raum ===
-  const topY = squareSize + 75;  // +75 px Verschiebung
+  const topY = squareSize + 50;  // +50 px Verschiebung
   const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
@@ -92,7 +92,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + 75); // +75 px Verschiebung
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + 45); // 50 - 5 = 45 px Verschiebung
 
   return canvas;
 };
