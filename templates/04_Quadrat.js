@@ -8,10 +8,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#f5f0e6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadratiges Bild (1:1), max 2/3 der Höhe ===
+  // === Quadrat-Bild (1:1), max 2/3 der Höhe ===
   const squareSize = Math.min(targetWidth, targetHeight * 2 / 3);
 
-  // Bild zuschneiden auf Quadrat
+  // Bild zuschneiden
   let sx, sy, sSize;
   if (img.width > img.height) {
     sSize = img.height;
@@ -23,20 +23,16 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     sy = (img.height - sSize) / 2;
   }
 
-  // Bild zeichnen (oben zentriert)
   const dx = (targetWidth - squareSize) / 2;
   const dy = 0;
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === Overlay-Text etwas tiefer ===
+  // === Textbereich berechnen ===
+  const topY = squareSize;
+  const bottomY = targetHeight - 140 - 60; // Platz für Button (120px + Padding) + URL (ca. 60px)
+  const textAreaHeight = bottomY - topY;
+
   const overlayMaxWidth = targetWidth * 0.9;
-  const overlayStartY = squareSize + 40;
-  const buttonHeight = 40;
-  const spacingAfterText = 30;
-  const footerHeight = 50;
-
-  const availableHeight = targetHeight - overlayStartY - buttonHeight - spacingAfterText - footerHeight;
-
   let chosenFontSize = 40;
   let lines = [];
   let lineHeight = 0;
@@ -45,11 +41,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.font = `900 ${size}px "Open Sans"`;
     lineHeight = size * 1.2;
     lines = wrapText(ctx, overlayText, overlayMaxWidth, 3);
-    if (lines.length * lineHeight <= availableHeight) {
+    if (lines.length * lineHeight <= textAreaHeight) {
       chosenFontSize = size;
       break;
     }
   }
+
+  const textBlockHeight = lines.length * lineHeight;
+  const textStartY = topY + (textAreaHeight - textBlockHeight) / 2;
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
@@ -57,41 +56,39 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textBaseline = 'top';
 
   lines.forEach((line, i) => {
-    ctx.fillText(line, targetWidth / 2, overlayStartY + i * lineHeight);
+    ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
 
-  // === Button "Jetzt besuchen" unter dem Text ===
-  const buttonY = overlayStartY + lines.length * lineHeight + 20;
+  // === Großer Button unterhalb vom Text ===
   const buttonText = "Jetzt besuchen";
-  const buttonFontSize = 18;
-  ctx.font = `bold ${buttonFontSize}px "Open Sans"`;
+  const buttonFontSize = 28;
+  const buttonHeight = 120;
+  const paddingX = 40;
+  const paddingY = 20;
 
+  ctx.font = `bold ${buttonFontSize}px "Open Sans"`;
   const buttonTextWidth = ctx.measureText(buttonText).width;
-  const paddingX = 20;
-  const paddingY = 10;
   const buttonWidth = buttonTextWidth + paddingX * 2;
   const buttonX = (targetWidth - buttonWidth) / 2;
+  const buttonY = bottomY + 10;
 
-  // Button zeichnen (abgerundetes Rechteck)
   ctx.fillStyle = '#5b4636';
-  const radius = 8;
-  roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, radius, true, false);
+  roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 14, true, false);
 
-  // Button-Text
   ctx.fillStyle = 'white';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === Website ganz unten ===
-  const urlText = website || "www.montessori-helden.de";
-  const footerFontSize = 16;
+  // === URL ganz unten – doppelte Schriftgröße ===
+  const urlText = website || "Webseite fehlt";
+  const footerFontSize = 32;
 
   ctx.font = `normal ${footerFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
 
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - 12); // 12px Abstand unten
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - 10);
 
   return canvas;
 };
@@ -149,7 +146,6 @@ function wrapText(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
-// === Abgerundetes Rechteck zeichnen ===
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (typeof radius === 'number') {
     radius = { tl: radius, tr: radius, br: radius, bl: radius };
