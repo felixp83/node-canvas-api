@@ -27,9 +27,15 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const dy = 0;
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === Textbereich berechnen ===
+  // === Textbereich ===
   const topY = squareSize;
-  const bottomY = targetHeight - 140 - 60; // Platz für Button (120px + Padding) + URL (ca. 60px)
+  const footerPadding = targetHeight * 0.05; // 5% Abstand unten für URL
+  const buttonOriginalHeight = 120;
+  const buttonHeight = buttonOriginalHeight * 0.9;
+  const buttonYOffset = buttonHeight * 0.1;
+
+  const urlHeight = 60;
+  const bottomY = targetHeight - footerPadding - urlHeight - buttonHeight - buttonYOffset;
   const textAreaHeight = bottomY - topY;
 
   const overlayMaxWidth = targetWidth * 0.9;
@@ -59,18 +65,19 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
 
-  // === Großer Button unterhalb vom Text ===
-  const buttonText = "Jetzt besuchen";
+  // === Button darunter ===
+  const buttonText = "JETZT BESUCHEN";
   const buttonFontSize = 28;
-  const buttonHeight = 120;
   const paddingX = 40;
   const paddingY = 20;
 
   ctx.font = `bold ${buttonFontSize}px "Open Sans"`;
   const buttonTextWidth = ctx.measureText(buttonText).width;
-  const buttonWidth = buttonTextWidth + paddingX * 2;
+
+  const baseButtonWidth = buttonTextWidth + paddingX * 2;
+  const buttonWidth = baseButtonWidth * 1.1;
   const buttonX = (targetWidth - buttonWidth) / 2;
-  const buttonY = bottomY + 10;
+  const buttonY = textStartY + textBlockHeight + buttonYOffset;
 
   ctx.fillStyle = '#5b4636';
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 14, true, false);
@@ -79,7 +86,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === URL ganz unten – doppelte Schriftgröße ===
+  // === URL ganz unten, 5% Abstand vom Rand ===
   const urlText = website || "Webseite fehlt";
   const footerFontSize = 32;
 
@@ -88,7 +95,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
 
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - 10);
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding);
 
   return canvas;
 };
