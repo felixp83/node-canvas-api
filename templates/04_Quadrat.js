@@ -36,7 +36,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonText = "JETZT BESUCHEN";
   const buttonFontSize = 28;
 
-  ctx.font = normal ${buttonFontSize}px "Open Sans";
+  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
   const buttonTextWidth = ctx.measureText(buttonText).width;
   const paddingX = 40;
   const baseButtonWidth = buttonTextWidth + paddingX * 2;
