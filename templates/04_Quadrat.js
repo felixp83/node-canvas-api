@@ -1,6 +1,6 @@
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight) {
+module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -8,10 +8,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#f5f0e6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadratige Bildgröße berechnen (1:1), max Breite = targetWidth, max Höhe = 2/3 von targetHeight ===
-  const squareSize = Math.min(targetWidth, targetHeight * (2 / 3));
+  // === Quadratiges Bild (1:1), max 2/3 der Höhe ===
+  const squareSize = Math.min(targetWidth, targetHeight * 2 / 3);
 
-  // Bild proportional zuschneiden für 1:1 (square crop)
+  // Bild zuschneiden auf Quadrat
   let sx, sy, sSize;
   if (img.width > img.height) {
     sSize = img.height;
@@ -23,16 +23,15 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     sy = (img.height - sSize) / 2;
   }
 
-  // Bild positionieren: horizontal zentriert, oben ausgerichtet
+  // Bild zeichnen (oben zentriert)
   const dx = (targetWidth - squareSize) / 2;
   const dy = 0;
-
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === Weiße URL-Box oben mittig auf dem Bild ===
-  const urlText = "Webseite fehlt";
-  
-  // Dynamische Schriftgröße für URL-Text (max 22px, min 12px)
+  // === URL-Box auf dem Bild (oben zentriert) ===
+  const urlText = website || "Webseite fehlt";
+
+  // Dynamische Schriftgröße für URL
   let urlFontSize = 20;
   const maxUrlWidth = targetWidth * 0.8;
   for (let size = 22; size >= 12; size--) {
@@ -43,17 +42,17 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     }
   }
 
-  const urlPaddingX = 12;
-  const urlPaddingY = 6;
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   const textWidth = ctx.measureText(urlText).width;
+  const urlPaddingX = 14;
+  const urlPaddingY = 8;
   const boxWidth = textWidth + urlPaddingX * 2;
   const boxHeight = urlFontSize + urlPaddingY * 2;
 
-  const boxX = targetWidth / 2 - boxWidth / 2;
-  const boxY = dy + 10; // 10px Abstand vom oberen Rand
+  const boxX = (targetWidth - boxWidth) / 2;
+  const boxY = dy + 10;
 
-  // URL-Box zeichnen
+  // Box zeichnen
   ctx.fillStyle = 'white';
   ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
 
@@ -65,9 +64,9 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Overlay-Text unten im beigen Bereich ===
   const overlayMaxWidth = targetWidth * 0.9;
-  const overlayMaxHeight = targetHeight - (squareSize + dy) - 30; // 30px Abstand unten zusätzlich
+  const overlayStartY = squareSize + 20;
+  const overlayMaxHeight = targetHeight - overlayStartY - 20;
 
-  // Dynamische Schriftgröße für Overlay-Text, max 3 Zeilen
   let chosenFontSize = 40;
   let lines = [];
   let lineHeight = 0;
@@ -83,14 +82,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
-  ctx.fillStyle = '#5b4636'; // dunkleres Beige/Braun passend zum Stil
+  ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
-  const startY = squareSize + 20; // 20px Abstand vom Bild unten
-
   lines.forEach((line, i) => {
-    ctx.fillText(line, targetWidth / 2, startY + i * lineHeight);
+    ctx.fillText(line, targetWidth / 2, overlayStartY + i * lineHeight);
   });
 
   return canvas;
