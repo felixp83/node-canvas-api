@@ -28,44 +28,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const dy = 0;
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === URL-Box auf dem Bild (oben zentriert) ===
-  const urlText = website || "Webseite fehlt";
-
-  // Dynamische Schriftgröße für URL
-  let urlFontSize = 20;
-  const maxUrlWidth = targetWidth * 0.8;
-  for (let size = 22; size >= 12; size--) {
-    ctx.font = `bold ${size}px "Open Sans"`;
-    if (ctx.measureText(urlText).width <= maxUrlWidth) {
-      urlFontSize = size;
-      break;
-    }
-  }
-
-  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
-  const textWidth = ctx.measureText(urlText).width;
-  const urlPaddingX = 14;
-  const urlPaddingY = 8;
-  const boxWidth = textWidth + urlPaddingX * 2;
-  const boxHeight = urlFontSize + urlPaddingY * 2;
-
-  const boxX = (targetWidth - boxWidth) / 2;
-  const boxY = dy + 10;
-
-  // Box zeichnen
-  ctx.fillStyle = 'white';
-  ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-
-  // URL-Text zeichnen
-  ctx.fillStyle = '#333';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText(urlText, targetWidth / 2, boxY + urlPaddingY);
-
-  // === Overlay-Text unten im beigen Bereich ===
+  // === Overlay-Text etwas tiefer ===
   const overlayMaxWidth = targetWidth * 0.9;
-  const overlayStartY = squareSize + 20;
-  const overlayMaxHeight = targetHeight - overlayStartY - 20;
+  const overlayStartY = squareSize + 40;
+  const buttonHeight = 40;
+  const spacingAfterText = 30;
+  const footerHeight = 50;
+
+  const availableHeight = targetHeight - overlayStartY - buttonHeight - spacingAfterText - footerHeight;
 
   let chosenFontSize = 40;
   let lines = [];
@@ -75,7 +45,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.font = `900 ${size}px "Open Sans"`;
     lineHeight = size * 1.2;
     lines = wrapText(ctx, overlayText, overlayMaxWidth, 3);
-    if (lines.length * lineHeight <= overlayMaxHeight) {
+    if (lines.length * lineHeight <= availableHeight) {
       chosenFontSize = size;
       break;
     }
@@ -89,6 +59,39 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   lines.forEach((line, i) => {
     ctx.fillText(line, targetWidth / 2, overlayStartY + i * lineHeight);
   });
+
+  // === Button "Jetzt besuchen" unter dem Text ===
+  const buttonY = overlayStartY + lines.length * lineHeight + 20;
+  const buttonText = "Jetzt besuchen";
+  const buttonFontSize = 18;
+  ctx.font = `bold ${buttonFontSize}px "Open Sans"`;
+
+  const buttonTextWidth = ctx.measureText(buttonText).width;
+  const paddingX = 20;
+  const paddingY = 10;
+  const buttonWidth = buttonTextWidth + paddingX * 2;
+  const buttonX = (targetWidth - buttonWidth) / 2;
+
+  // Button zeichnen (abgerundetes Rechteck)
+  ctx.fillStyle = '#5b4636';
+  const radius = 8;
+  roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, radius, true, false);
+
+  // Button-Text
+  ctx.fillStyle = 'white';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
+
+  // === Website ganz unten ===
+  const urlText = website || "www.montessori-helden.de";
+  const footerFontSize = 16;
+
+  ctx.font = `normal ${footerFontSize}px "Open Sans"`;
+  ctx.fillStyle = '#5b4636';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - 12); // 12px Abstand unten
 
   return canvas;
 };
@@ -144,4 +147,29 @@ function wrapText(ctx, text, maxWidth, maxLines) {
 
   if (currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
+}
+
+// === Abgerundetes Rechteck zeichnen ===
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof radius === 'number') {
+    radius = { tl: radius, tr: radius, br: radius, bl: radius };
+  } else {
+    const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+    for (let side in defaultRadius) {
+      radius[side] = radius[side] || defaultRadius[side];
+    }
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius.tl, y);
+  ctx.lineTo(x + width - radius.tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+  ctx.lineTo(x + width, y + height - radius.br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+  ctx.lineTo(x + radius.bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+  ctx.lineTo(x, y + radius.tl);
+  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
 }
