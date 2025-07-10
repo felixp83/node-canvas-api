@@ -4,14 +4,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Beiger Hintergrund ===
+  // === Hintergrund ===
   ctx.fillStyle = '#f5f0e6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadrat-Bild (1:1), max 2/3 der Höhe ===
+  // === Bildbereich (quadratisch, max 2/3 Höhe) ===
   const squareSize = Math.min(targetWidth, targetHeight * 2 / 3);
-
-  // Bild zuschneiden
   let sx, sy, sSize;
   if (img.width > img.height) {
     sSize = img.height;
@@ -27,14 +25,15 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const dy = 0;
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
-  // === Textbereich ===
+  // === Textpositionierung ===
   const topY = squareSize;
-  const footerPadding = targetHeight * 0.05; // 5% Abstand unten für URL
-  const buttonOriginalHeight = 120;
-  const buttonHeight = buttonOriginalHeight * 0.9;
-  const buttonYOffset = buttonHeight * 0.1;
-
+  const footerPadding = targetHeight * 0.05;
   const urlHeight = 60;
+
+  const baseButtonHeight = 120;
+  const buttonHeight = baseButtonHeight * 0.9 * 0.85; // -10% & -15%
+  const buttonYOffset = buttonHeight * 0.1 + 10;       // Abstand zum Text +10px zusätzlich
+
   const bottomY = targetHeight - footerPadding - urlHeight - buttonHeight - buttonYOffset;
   const textAreaHeight = bottomY - topY;
 
@@ -65,17 +64,17 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
 
-  // === Button darunter ===
+  // === Button unterhalb des Textes ===
   const buttonText = "JETZT BESUCHEN";
   const buttonFontSize = 28;
   const paddingX = 40;
   const paddingY = 20;
 
-  ctx.font = `bold ${buttonFontSize}px "Open Sans"`;
+  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
   const buttonTextWidth = ctx.measureText(buttonText).width;
 
   const baseButtonWidth = buttonTextWidth + paddingX * 2;
-  const buttonWidth = baseButtonWidth * 1.1;
+  const buttonWidth = baseButtonWidth * 1.1 * 1.2; // +10%, +20%
   const buttonX = (targetWidth - buttonWidth) / 2;
   const buttonY = textStartY + textBlockHeight + buttonYOffset;
 
@@ -86,8 +85,8 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === URL ganz unten, 5% Abstand vom Rand ===
-  const urlText = website || "Webseite fehlt";
+  // === URL ganz unten ===
+  const urlText = website || "www.montessori-helden.de";
   const footerFontSize = 32;
 
   ctx.font = `normal ${footerFontSize}px "Open Sans"`;
