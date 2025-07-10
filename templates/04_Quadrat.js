@@ -26,7 +26,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
   // === Footer-Abstand (für URL und Button) ===
-  const footerPadding = targetHeight * 0.2;
+  const footerPadding = targetHeight * 0.05;
   const urlFontSize = 32;
   const urlText = website || "www.montessori-helden.de";
 
@@ -43,17 +43,11 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15; // bisher +10% +20% +15%
 
   const buttonX = (targetWidth - buttonWidth) / 2;
-
-  // Neuer Abstand zwischen URL und Button
-  const urlToButtonSpacing = footerPadding;
-
-  // URL ist footerPadding vom unteren Rand
-  // Button ist urlToButtonSpacing + urlFontSize + buttonHeight über der unteren Kante
-  const buttonY = targetHeight - footerPadding - urlFontSize - urlToButtonSpacing - buttonHeight;
+  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight;
 
   // === Haupttext dynamisch in freiem Raum ===
   const topY = squareSize;
-  const bottomY = buttonY - 20; // 20px Abstand zum Button
+  const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
   const overlayMaxWidth = targetWidth * 0.9;
