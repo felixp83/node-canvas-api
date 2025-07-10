@@ -42,17 +42,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const baseButtonWidth = buttonTextWidth + paddingX * 2;
   const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15; // bisher +10% +20% +15%
 
+  // === 15% Downshift ===
+  const downshift = targetHeight * 0.15;
+
   const buttonX = (targetWidth - buttonWidth) / 2;
-
-  // Verschiebungsfaktor 15%
-  const shiftFactor = 0.15;
-
-  // Button Y wird nach unten verschoben
-  let buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight;
-  buttonY += targetHeight * shiftFactor;
+  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + downshift;
 
   // === Haupttext dynamisch in freiem Raum ===
-  const topY = squareSize;
+  const topY = squareSize + downshift;
   const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
@@ -72,9 +69,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   const textBlockHeight = lines.length * lineHeight;
-
-  // textStartY wird um 15% nach unten verschoben
-  const textStartY = topY + (textAreaHeight - textBlockHeight) / 2 + targetHeight * shiftFactor;
+  const textStartY = topY + (textAreaHeight - textBlockHeight) / 2;
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
@@ -100,9 +95,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-
-  // URL wird um 15% nach unten verschoben
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + targetHeight * shiftFactor);
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + downshift);
 
   return canvas;
 };
