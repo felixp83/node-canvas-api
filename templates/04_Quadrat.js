@@ -62,7 +62,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   let lineHeight = 0;
 
   for (let size = 60; size >= 20; size -= 2) {
-    ctx.font = 900 ${size}px "Open Sans";
+    ctx.font = `900 ${size}px "Open Sans"`;
     lineHeight = size * 1.2;
     lines = wrapText(ctx, overlayText, overlayMaxWidth, 3);
     if (lines.length * lineHeight <= textAreaHeight) {
@@ -74,7 +74,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const textBlockHeight = lines.length * lineHeight;
   const textStartY = topY + (textAreaHeight - textBlockHeight) / 2;
 
-  ctx.font = 900 ${chosenFontSize}px "Open Sans";
+  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -88,13 +88,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 14, true, false);
 
   ctx.fillStyle = 'white';
-  ctx.font = normal ${buttonFontSize}px "Open Sans";
+  ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL ganz unten ===
-  ctx.font = normal ${urlFontSize}px "Open Sans";
+  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
