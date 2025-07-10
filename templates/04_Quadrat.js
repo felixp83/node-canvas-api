@@ -26,8 +26,11 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
 
   // === Footer-Abstand (für URL und Button) ===
-  // URL soll 10% von der Höhe nach unten rücken (näher zur unteren Kante)
-  const footerPadding = targetHeight * 0.10; // Abstand URL zur unteren Kante
+  // Hier definieren wir den Abstand, wieviel wir die URL um 10% nach unten verschieben wollen
+  const moveDown = targetHeight * 0.10;
+
+  // Ursprünglicher footerPadding (war 5%)
+  const footerPadding = targetHeight * 0.05;
   const urlFontSize = 32;
   const urlText = website || "www.montessori-helden.de";
 
@@ -45,18 +48,19 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   const buttonX = (targetWidth - buttonWidth) / 2;
 
-  // Abstand zwischen URL und Button = footerPadding (gleicher Abstand wie zur unteren Kante)
-  const urlToButtonSpacing = footerPadding;
+  // Neue Position der URL: 10% nach unten von der unteren Kante (targetHeight)
+  const urlY = targetHeight - moveDown;
 
-  // URL Y-Position
-  const urlY = targetHeight - footerPadding;
+  // Abstand zwischen URL und unterer Kante (nach Verschiebung)
+  const distanceUrlToBottom = targetHeight - urlY;
 
-  // Button Y-Position: urlY minus Abstand (urlToButtonSpacing), minus URL Fontgröße, minus Buttonhöhe
-  const buttonY = urlY - urlToButtonSpacing - urlFontSize - buttonHeight;
+  // Abstand Button zu URL = Abstand URL zu unterer Kante
+  // Also Button Y ist URL Y minus Abstand zwischen URL und unterer Kante minus Button Höhe
+  const buttonY = urlY - distanceUrlToBottom - buttonHeight;
 
   // === Haupttext dynamisch in freiem Raum ===
   const topY = squareSize;
-  const bottomY = buttonY - 20; // 20px Abstand oberhalb Button
+  const bottomY = buttonY - 20; // 20px Abstand zum Button
   const textAreaHeight = bottomY - topY;
 
   const overlayMaxWidth = targetWidth * 0.9;
@@ -96,7 +100,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === URL ganz unten ===
+  // === URL ganz unten (neu positioniert) ===
   ctx.font = `normal ${urlFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
