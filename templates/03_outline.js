@@ -12,7 +12,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
   // === Passepartout-Rahmen (weiße Linie eingerückt) ===
-  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.04;  // 4% Abstand
+  const passepartoutInset = Math.min(targetWidth, targetHeight) * 0.04;
   ctx.save();
   ctx.strokeStyle = 'white';
   ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.005;
@@ -29,12 +29,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const bannerY = targetHeight * 0.3;
   ctx.save();
   ctx.fillStyle = '#f5a623';
-  ctx.fillRect(
-    0,
-    bannerY,
-    targetWidth,
-    bannerHeight
-  );
+  ctx.fillRect(0, bannerY, targetWidth, bannerHeight);
   ctx.restore();
 
   // === Text innerhalb der Farbfläche ===
@@ -48,7 +43,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lineHeight = size * 1.2;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, 2);
     const totalTextHeight = testLines.length * lineHeight;
-    if (totalTextHeight <= bannerHeight * 0.7) {
+    if (totalTextHeight <= bannerHeight * 0.8) {
       chosenFontSize = size;
       lines = testLines;
       break;
@@ -76,12 +71,8 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const urlFontSize = Math.min(22, chosenFontSize * 0.4);
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
 
-  const urlY = bannerY + bannerHeight - bannerHeight * 0.15; // 15% Abstand vom unteren Rand des Banners
-  ctx.fillText(
-    urlText,
-    targetWidth / 2,
-    urlY
-  );
+  const urlY = bannerY + bannerHeight - bannerHeight * 0.15;
+  ctx.fillText(urlText, targetWidth / 2, urlY);
 
   return canvas;
 };
@@ -108,10 +99,13 @@ function breakLongWord(ctx, word, maxWidth) {
 }
 
 function wrapText(ctx, text, maxWidth, maxLines) {
-  const words = text.split(' ');
-  let lines = [], currentLine = '';
+  const words = text.trim().split(/\s+/);
+  let lines = [];
+  let currentLine = '';
 
-  for (let word of words) {
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+
     if (ctx.measureText(word).width > maxWidth) {
       const broken = breakLongWord(ctx, word, maxWidth);
       for (let part of broken) {
