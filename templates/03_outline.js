@@ -27,23 +27,38 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === Farbfläche (z.B. orange) über gesamte Breite ===
   const bannerHeight = targetHeight * 0.18;
   const bannerY = targetHeight * 0.3;
+
   ctx.save();
   ctx.fillStyle = '#f5a623';
   ctx.fillRect(0, bannerY, targetWidth, bannerHeight);
   ctx.restore();
 
-  // === Text innerhalb der Farbfläche ===
+  // === Text vorbereiten ===
+  const padding = 20;
   const maxTextWidth = targetWidth * 0.9;
+  const maxLines = 2;
+  const maxTextBlockHeight = bannerHeight * 0.8;
+
   let chosenFontSize = 16;
   let lines = [];
   let lineHeight = 0;
 
+  // Dynamische Fontgröße und Zeilenumbrüche (übernommen aus zweitem Template)
   for (let size = 128; size >= 16; size -= 2) {
     ctx.font = `900 ${size}px "Open Sans"`;
-    lineHeight = size * 1.2;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, 2);
+    lineHeight = size * 1.3;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
-    if (totalTextHeight <= bannerHeight * 0.8) {
+
+    // Prüfung, dass Text passt und keine abgeschnittenen Wörter (keine falschen Trennungen)
+    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+    const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+
+    if (
+      testLines.length <= maxLines &&
+      totalTextHeight <= maxTextBlockHeight &&
+      joined === original
+    ) {
       chosenFontSize = size;
       lines = testLines;
       break;
@@ -52,27 +67,42 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   if (lines.length === 0) {
     ctx.font = `900 16px "Open Sans"`;
-    lineHeight = 16 * 1.2;
-    lines = wrapText(ctx, overlayText, maxTextWidth, 2);
+    lineHeight = 16 * 1.3;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
+  // === Text zeichnen ===
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
 
   lines.forEach((line, index) => {
+    // Vertikale Position in der Farbfläche (Banner)
     const y = bannerY + bannerHeight * 0.25 + index * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
 
-  // === URL innerhalb der Farbfläche ===
-  const urlText = website || "www.montessori-helden.de!";
-  const urlFontSize = Math.min(22, chosenFontSize * 0.4);
-  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  // === URL dynamisch vorbereiten ===
+  const urlText = website || "www.montessori-helden.de";
+  const maxUrlWidth = maxTextWidth;
+  let urlFontSize = 16;
+  let urlLineHeight = 0;
+  const maxUrlFontSize = Math.min(22, Math.floor(chosenFontSize * 0.4));
 
-  const urlY = bannerY + bannerHeight - bannerHeight * 0.15;
-  ctx.fillText(urlText, targetWidth / 2, urlY);
+  for (let size = maxUrlFontSize; size >= 12; size--) {
+    ctx.font = `bold ${size}px "Open Sans"`;
+    if (ctx.measureText(urlText).width <= maxUrlWidth) {
+      urlFontSize = size;
+      urlLineHeight = size * 1.3;
+      break;
+    }
+  }
+  if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
+
+  // URL zeichnen, am unteren Rand der Farbfläche
+  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  ctx.fillText(urlText, targetWidth / 2, bannerY + bannerHeight - bannerHeight * 0.15);
 
   return canvas;
 };
