@@ -4,6 +4,8 @@ FROM node:20
 # System-Abhängigkeiten und Fonts installieren
 RUN apt-get update && apt-get install -y \
     fontconfig \
+    fontconfig-config \
+    fontconfig-utils \
     fonts-dejavu-core \
     fonts-dejavu-extra \
     libcairo2-dev \
@@ -12,6 +14,9 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     librsvg2-dev \
   && rm -rf /var/lib/apt/lists/*
+
+# Umgebungsvariable für Fontconfig setzen
+ENV FONTCONFIG_PATH=/etc/fonts
 
 # Arbeitsverzeichnis setzen
 WORKDIR /app
