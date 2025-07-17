@@ -52,9 +52,9 @@ module.exports = async function generateTemplate(
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === URL dynamisch vorbereiten ===
+  // === URL (fester Text, fixe Größe) ===
   const urlText = website || "www.montessori-helden.de";
-  const urlFontSize = 32; // feste Schriftgröße
+  const urlFontSize = 48; // 1.5x größer als vorher
   const urlLineHeight = urlFontSize * 1.3;
 
   // === Box-Berechnung ===
@@ -64,11 +64,13 @@ module.exports = async function generateTemplate(
 
   const rectWidth = maxTextWidth + padding * 2;
   const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+
   const verticalPositionFactor = 0.8;
-  const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
+  let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
+  rectY -= 720; // <<< VERSCHIEBUNG NACH OBEN
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Hintergrundbox mit 90% Deckkraft (alpha=0.9) ===
+  // === Hintergrundbox ===
   const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
@@ -78,9 +80,9 @@ module.exports = async function generateTemplate(
   ctx.fill();
   ctx.restore();
 
-  // === Text zeichnen (weiß, ohne Schatten) ===
+  // === Haupttext zeichnen (weiß) ===
   ctx.save();
-  ctx.fillStyle = '#fff'; // Schriftfarbe Weiß
+  ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   lines.forEach((line, index) => {
@@ -89,9 +91,9 @@ module.exports = async function generateTemplate(
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (weiß, ohne Schatten) ===
+  // === URL zeichnen (weiß) ===
   ctx.save();
-  ctx.fillStyle = '#fff'; // Schriftfarbe Weiß
+  ctx.fillStyle = '#fff';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
