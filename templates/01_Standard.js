@@ -29,7 +29,7 @@ module.exports = async function generateTemplate(
   let lineHeight = 0;
 
   for (let size = 128; size >= 16; size -= 2) {
-    ctx.font = `900 ${size}px "Open Sans"`;
+    ctx.font = `960 ${size}px "Open Sans"`;
     lineHeight = size * 1.3;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
