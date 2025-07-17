@@ -67,7 +67,7 @@ module.exports = async function generateTemplate(
 
   const verticalPositionFactor = 0.8;
   let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
-  rectY -= 880; // <<< VERSCHIEBUNG NACH OBEN
+  rectY -= 910; // <<< VERSCHIEBUNG NACH OBEN
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
