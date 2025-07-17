@@ -29,7 +29,7 @@ module.exports = async function generateTemplate(
   let lineHeight = 0;
 
   for (let size = 128; size >= 16; size -= 2) {
-    ctx.font = `960 ${size}px "Open Sans"`;
+    ctx.font = `900 ${size}px "Open Sans"`;
     lineHeight = size * 1.3;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
@@ -67,7 +67,7 @@ module.exports = async function generateTemplate(
 
   const verticalPositionFactor = 0.8;
   let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
-  rectY -= 800; // <<< VERSCHIEBUNG NACH OBEN
+  rectY -= 880; // <<< VERSCHIEBUNG NACH OBEN
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
