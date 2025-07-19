@@ -43,14 +43,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   let lines = [];
   let lineHeight = 0;
 
-  // Dynamische Fontgröße und Zeilenumbrüche (übernommen aus zweitem Template)
   for (let size = 128; size >= 16; size -= 2) {
     ctx.font = `900 ${size}px "Open Sans"`;
     lineHeight = size * 1.3;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
-    // Prüfung, dass Text passt und keine abgeschnittenen Wörter (keine falschen Trennungen)
     const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
     const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
 
@@ -71,36 +69,25 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Text zeichnen ===
+  // === Text zeichnen (weiß) ===
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
 
   lines.forEach((line, index) => {
-    // Vertikale Position in der Farbfläche (Banner)
     const y = bannerY + bannerHeight * 0.25 + index * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
 
-  // === URL dynamisch vorbereiten ===
+  // === URL vorbereiten (feste Größe: 48px) ===
   const urlText = website || "www.montessori-helden.de";
-  const maxUrlWidth = maxTextWidth;
-  let urlFontSize = 16;
-  let urlLineHeight = 0;
-  const maxUrlFontSize = Math.min(22, Math.floor(chosenFontSize * 0.4));
+  const urlFontSize = 48;
 
-  for (let size = maxUrlFontSize; size >= 12; size--) {
-    ctx.font = `bold ${size}px "Open Sans"`;
-    if (ctx.measureText(urlText).width <= maxUrlWidth) {
-      urlFontSize = size;
-      urlLineHeight = size * 1.3;
-      break;
-    }
-  }
-  if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
-
-  // URL zeichnen, am unteren Rand der Farbfläche
+  // === URL zeichnen (weiß, am unteren Rand des Banners) ===
+  ctx.fillStyle = 'white';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   ctx.fillText(urlText, targetWidth / 2, bannerY + bannerHeight - bannerHeight * 0.15);
 
