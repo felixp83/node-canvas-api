@@ -46,44 +46,32 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === URL dynamisch vorbereiten ===
+  // === URL vorbereiten ===
   const urlText = website || "www.montessori-helden.de";
-  let urlFontSize = 16;
-  let urlLineHeight = 0;
-  const maxUrlWidth = maxTextWidth;
-  const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
-
-  for (let size = maxUrlFontSize; size >= 12; size -= 1) {
-    ctx.font = `bold ${size}px "Open Sans"`;
-    const metrics = ctx.measureText(urlText);
-    if (metrics.width <= maxUrlWidth) {
-      urlFontSize = size;
-      urlLineHeight = size * 1.3;
-      break;
-    }
-  }
-  if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
+  const urlFontSize = 48;
+  const urlLineHeight = urlFontSize * 1.3;
 
   // === Box-Berechnung ===
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`; // zurück für Messung
+  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  // URL Abstand nach oben wird 40% weniger, deshalb padding wird 60% von vorher für URL-Abstand genutzt
   const urlPaddingTop = padding * 0.6;
 
   const rectWidth = maxTextWidth + padding * 2;
   const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+
   const verticalPositionFactor = 0.8;
-  const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
+  let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
+  rectY -= 910; // <<< Verschiebung nach oben
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ohne runde Ecken, komplett deckend ===
   ctx.save();
-  ctx.fillStyle = 'rgba(173, 216, 230, 1)'; // komplett deckend
+  ctx.fillStyle = 'rgba(173, 216, 230, 1)';
   ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
   ctx.restore();
 
-  // === Dünne, leicht wellige weiße Linie als Kontur der Farbfläche, eingerückt ===
-  const lineInset = 9; // Einrückung innen
+  // === Dünne, leicht wellige weiße Linie als Kontur ===
+  const lineInset = 9;
   const waveAmplitude = 3;
   const waveLength = 20;
 
@@ -92,23 +80,23 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.lineWidth = 1.5;
   ctx.beginPath();
 
-  // Obere Linie (von links nach rechts)
+  // Obere Linie
   for (let x = rectX + lineInset; x <= rectX + rectWidth - lineInset; x++) {
     const y = rectY + lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
     if (x === rectX + lineInset) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
-  // Rechte Linie (von oben nach unten)
+  // Rechte Linie
   for (let y = rectY + lineInset; y <= rectY + rectHeight - lineInset; y++) {
     const x = rectX + rectWidth - lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
   }
-  // Untere Linie (von rechts nach links)
+  // Untere Linie
   for (let x = rectX + rectWidth - lineInset; x >= rectX + lineInset; x--) {
     const y = rectY + rectHeight - lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
   }
-  // Linke Linie (von unten nach oben)
+  // Linke Linie
   for (let y = rectY + rectHeight - lineInset; y >= rectY + lineInset; y--) {
     const x = rectX + lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
@@ -118,7 +106,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.stroke();
   ctx.restore();
 
-  // === Text zeichnen (weiß, ohne Schatten) ===
+  // === Haupttext zeichnen ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
@@ -129,7 +117,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (weiß, ohne Schatten) ===
+  // === URL zeichnen ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
@@ -138,7 +126,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + urlPaddingTop // neuer Abstand zum Haupttext
+    rectY + padding + totalTextHeight + urlPaddingTop
   );
   ctx.restore();
 
