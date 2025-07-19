@@ -27,12 +27,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Footer-Abstand (für URL und Button) ===
   const footerPadding = targetHeight * 0.05;
-  const urlFontSize = 32;
+  const urlFontSize = 48; // ⬅️ Geändert von 32 auf 48
   const urlText = website || "www.montessori-helden.de";
 
   // === Button-Parameter ===
   const buttonBaseHeight = 120;
-  const buttonHeight = buttonBaseHeight * 0.9 * 0.85 * 0.9; // bisherige Reduktion + weitere -10%
+  const buttonHeight = buttonBaseHeight * 0.9 * 0.85 * 0.9;
   const buttonText = "JETZT BESUCHEN";
   const buttonFontSize = 28;
 
@@ -40,13 +40,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonTextWidth = ctx.measureText(buttonText).width;
   const paddingX = 40;
   const baseButtonWidth = buttonTextWidth + paddingX * 2;
-  const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15; // bisher +10% +20% +15%
+  const buttonWidth = baseButtonWidth * 1.1 * 1.2 * 1.15;
 
   const buttonX = (targetWidth - buttonWidth) / 2;
-  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 50; // +50 px Verschiebung
+  const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 50;
 
   // === Haupttext dynamisch in freiem Raum ===
-  const topY = squareSize + 50;  // +50 px Verschiebung
+  const topY = squareSize + 50;
   const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
@@ -88,11 +88,11 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL ganz unten ===
-  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
+  ctx.font = `normal ${urlFontSize}px "Open Sans"`; // ⬅️ Font-Größe 48px
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + 45); // 50 - 5 = 45 px Verschiebung
+  ctx.fillText(urlText, targetWidth / 2, targetHeight - footerPadding + 45);
 
   return canvas;
 };
