@@ -24,9 +24,9 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   );
   ctx.restore();
 
-  // === Farbfläche (z.B. orange) über gesamte Breite ===
-  const bannerHeight = targetHeight * 0.18;
-  const bannerY = targetHeight * 0.3;
+  // === Banner (leicht nach oben versetzt und höher) ===
+  const bannerHeight = targetHeight * 0.18 + 8;        // +8px höher
+  const bannerY = targetHeight * 0.3 - 30;             // 30px höher positioniert
 
   ctx.save();
   ctx.fillStyle = '#f5a623';
@@ -34,7 +34,6 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.restore();
 
   // === Text vorbereiten ===
-  const padding = 20;
   const maxTextWidth = targetWidth * 0.9;
   const maxLines = 2;
   const maxTextBlockHeight = bannerHeight * 0.8;
@@ -69,7 +68,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Text zeichnen (weiß) ===
+  // === Text zeichnen ===
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -80,11 +79,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, y);
   });
 
-  // === URL vorbereiten (feste Größe: 48px) ===
+  // === URL vorbereiten ===
   const urlText = website || "www.montessori-helden.de";
   const urlFontSize = 48;
 
-  // === URL zeichnen (weiß, am unteren Rand des Banners) ===
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
