@@ -29,7 +29,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const bannerY = targetHeight * 0.3 - 30;             // 30px höher positioniert
 
   ctx.save();
-  ctx.fillStyle = '#dfecf2';
+  ctx.fillStyle = '#f3d4b7';
   ctx.fillRect(0, bannerY, targetWidth, bannerHeight);
   ctx.restore();
 
@@ -69,7 +69,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   // === Text zeichnen ===
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = '#414141';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
@@ -83,7 +83,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const urlText = website || "www.montessori-helden.de";
   const urlFontSize = 48;
 
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = '#414141';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
