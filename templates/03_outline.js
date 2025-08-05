@@ -29,7 +29,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const bannerY = targetHeight * 0.3 - 30;             // 30px höher positioniert
 
   ctx.save();
-  ctx.fillStyle = '#f5a623';
+  ctx.fillStyle = '#dfecf2';
   ctx.fillRect(0, bannerY, targetWidth, bannerHeight);
   ctx.restore();
 
