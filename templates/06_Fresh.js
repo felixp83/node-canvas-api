@@ -11,7 +11,7 @@ module.exports = async function generateFreshTemplate(
   const ctx = canvas.getContext('2d');
 
   // === Fester oberer weißer Bereich (immer sichtbar oben) ===
-  const topWhiteHeight = 375;
+  const topWhiteHeight = 500;
 
   // === Hintergrund gesplittet: weiß oben, Bild unten ===
   ctx.fillStyle = '#fff';
@@ -113,7 +113,7 @@ module.exports = async function generateFreshTemplate(
   const urlWidth = ctx.measureText(urlText).width + 100;
   const urlHeight = urlFontSize * 1.6;
   const urlX = (targetWidth - urlWidth) / 2;
-  const urlY = targetHeight - urlHeight - 40;
+  const urlY = targetHeight - urlHeight - 55; // 15px höher
 
   ctx.fillStyle = '#75C47E';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
