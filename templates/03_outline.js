@@ -69,7 +69,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   // === Text zeichnen ===
-  ctx.fillStyle = 'white';
+  ctx.fillStyle = 'black';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
@@ -83,7 +83,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const urlText = website || "www.montessori-helden.de";
   const urlFontSize = 48;
 
-  ctx.fillStyle = 'white';
+  ctx.fillStyle = 'black';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
