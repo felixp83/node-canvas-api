@@ -10,35 +10,17 @@ module.exports = async function generateFreshTemplate(
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Hintergrund weiß ===
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-  // === Fester oberer weißer Bereich (375px) ===
+  // === Fester oberer weißer Bereich (immer sichtbar oben) ===
   const topWhiteHeight = 375;
 
-  // === CTA-Kapsel oben ===
-  const ctaText = 'JETZT MERKEN';
-  const ctaFontSize = 48;
-  ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
-  const ctaWidth = ctx.measureText(ctaText).width + 100;
-  const ctaHeight = ctaFontSize * 1.6;
-  const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = 80;
-
-  ctx.fillStyle = '#75C47E';
-  roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
-  ctx.fill();
-
+  // === Hintergrund gesplittet: weiß oben, Bild unten ===
   ctx.fillStyle = '#fff';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
+  ctx.fillRect(0, 0, targetWidth, topWhiteHeight);
 
   // === Headline vorbereiten ===
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = topWhiteHeight - ctaY - ctaHeight - 40;
+  const maxTextBlockHeight = topWhiteHeight * 0.5;
   const maxLines = 2;
 
   let chosenFontSize = 16;
@@ -64,14 +46,15 @@ module.exports = async function generateFreshTemplate(
   }
 
   if (lines.length === 0) {
-    ctx.font = `900 16px "Open Sans"`;
-    lineHeight = 16 * 1.3;
-    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    ctx.font = `900 32px "Open Sans"`;
+    chosenFontSize = 32;
+    lineHeight = 32 * 1.3;
+    lines = [overlayText];
   }
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  const textY = ctaY + ctaHeight + 40;
+  const textY = topWhiteHeight / 2 - totalTextHeight / 2 + 40;
 
   ctx.fillStyle = '#3B2F2F';
   ctx.textAlign = 'center';
@@ -80,7 +63,25 @@ module.exports = async function generateFreshTemplate(
     ctx.fillText(line, targetWidth / 2, textY + index * lineHeight);
   });
 
-  // === Bild ===
+  // === CTA-Kapsel oben (im weißen Bereich) ===
+  const ctaText = 'JETZT MERKEN';
+  const ctaFontSize = 48;
+  ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
+  const ctaWidth = ctx.measureText(ctaText).width + 100;
+  const ctaHeight = ctaFontSize * 1.6;
+  const ctaX = (targetWidth - ctaWidth) / 2;
+  const ctaY = 80;
+
+  ctx.fillStyle = '#75C47E';
+  roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
+
+  // === Bild (unter dem weißen Bereich, ggf. beschnitten) ===
   const imgY = topWhiteHeight;
   const imgHeight = targetHeight - topWhiteHeight;
 
