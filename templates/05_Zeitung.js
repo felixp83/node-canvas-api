@@ -4,27 +4,25 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Layout Parameter ===
-  const topWhiteHeight = targetHeight * 0.18;
-  const bottomWhiteHeight = targetHeight * 0.15;
-  const middleHeight = targetHeight - topWhiteHeight - bottomWhiteHeight;
+  const topHeight = targetHeight * 0.18;
+  const bottomHeight = targetHeight * 0.15;
+  const imageHeight = targetHeight - topHeight - bottomHeight;
 
-  // === Hintergrund weiß ===
-  ctx.fillStyle = '#fff';
+  // === Hintergrund komplett weiß ===
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Obere Abrisskante ===
-  drawTornEdge(ctx, 0, topWhiteHeight - 10, targetWidth, 20, 16);
+  // === Abrisskante unten am oberen weißen Bereich ===
+  drawTornEdge(ctx, 0, topHeight - 10, targetWidth, 20, 12, false);
 
-  // === Call to Action oben ===
-  ctx.fillStyle = '#000';
-  const ctaFontSize = Math.floor(topWhiteHeight * 0.3);
-  ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
+  // === Text: "JETZT ANSCHAUEN" (fett, mittig oben) ===
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold ${Math.floor(topHeight * 0.3)}px Open Sans`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('JETZT ANSCHAUEN', targetWidth / 2, topWhiteHeight / 2);
+  ctx.fillText('JETZT ANSCHAUEN', targetWidth / 2, topHeight / 2);
 
-  // === Bildbereich mittig ===
+  // === Bild ===
   let sSize, sx, sy;
   if (img.width > img.height) {
     sSize = img.height;
@@ -36,41 +34,60 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     sy = (img.height - sSize) / 2;
   }
 
-  ctx.drawImage(img, sx, sy, sSize, sSize, 0, topWhiteHeight, targetWidth, middleHeight);
+  ctx.drawImage(img, sx, sy, sSize, sSize, 0, topHeight, targetWidth, imageHeight);
 
-  // === Titelbalken über Bild ===
-  const titleBarHeight = middleHeight * 0.18;
-  const titleBarY = topWhiteHeight + middleHeight / 2 - titleBarHeight / 2;
+  // === Transparenter Balken für Titel ===
+  const barHeight = imageHeight * 0.18;
+  const barY = topHeight + imageHeight / 2 - barHeight / 2;
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillRect(0, titleBarY, targetWidth, titleBarHeight);
+  ctx.fillRect(0, barY, targetWidth, barHeight);
 
-  ctx.fillStyle = '#000';
+  // === Overlay Text ===
   const maxTitleWidth = targetWidth * 0.9;
-  ctx.font = `bold 36px "Open Sans"`;
-  const lines = wrapText(ctx, overlayText, maxTitleWidth, 2);
-  const lineHeight = 40;
-  const titleStartY = titleBarY + (titleBarHeight - lineHeight * lines.length) / 2;
+  const maxLines = 2;
+  ctx.fillStyle = '#000';
+  let titleFontSize = 40;
+  let lines;
+
+  for (let size = 50; size >= 20; size -= 2) {
+    ctx.font = `bold ${size}px Open Sans`;
+    lines = wrapText(ctx, overlayText, maxTitleWidth, maxLines);
+    if (lines.length <= maxLines) {
+      titleFontSize = size;
+      break;
+    }
+  }
+
+  ctx.font = `bold ${titleFontSize}px Open Sans`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const lineHeight = titleFontSize * 1.2;
+  const textStartY = barY + (barHeight - lines.length * lineHeight) / 2 + lineHeight / 2;
+
   lines.forEach((line, i) => {
-    ctx.fillText(line, targetWidth / 2, titleStartY + i * lineHeight);
+    ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
 
-  // === Untere Abrisskante ===
-  const bottomY = targetHeight - bottomWhiteHeight;
-  drawTornEdge(ctx, 0, bottomY, targetWidth, 20, 16, true);
+  // === Abrisskante oben an unterem weißen Bereich ===
+  const bottomY = targetHeight - bottomHeight;
+  drawTornEdge(ctx, 0, bottomY, targetWidth, 20, 12, true);
 
-  // === URL unten ===
+  // === URL ===
   const urlText = website || 'www.montessori-helden.de';
-  ctx.fillStyle = '#000';
-  const urlFontSize = Math.floor(bottomWhiteHeight * 0.22);
-  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
+  ctx.fillStyle = '#444';
+  const urlFontSize = Math.floor(bottomHeight * 0.25);
+  ctx.font = `normal ${urlFontSize}px Open Sans`;
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(urlText, targetWidth / 2, bottomY + bottomWhiteHeight / 2);
+  ctx.fillText(urlText, targetWidth / 2, bottomY + bottomHeight / 2);
 
   return canvas;
 };
 
+// === Abrisskanten zeichnen ===
 function drawTornEdge(ctx, x, y, width, height, zigzagSize, topEdge = false) {
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   if (topEdge) {
     ctx.moveTo(x, y + height);
@@ -79,10 +96,8 @@ function drawTornEdge(ctx, x, y, width, height, zigzagSize, topEdge = false) {
       ctx.lineTo(i, toggle ? y : y + height);
       toggle = !toggle;
     }
-    ctx.lineTo(width, y + height);
     ctx.lineTo(width, y + height * 2);
-    ctx.lineTo(x, y + height * 2);
-    ctx.closePath();
+    ctx.lineTo(0, y + height * 2);
   } else {
     ctx.moveTo(x, y);
     let toggle = true;
@@ -90,18 +105,17 @@ function drawTornEdge(ctx, x, y, width, height, zigzagSize, topEdge = false) {
       ctx.lineTo(i, toggle ? y + height : y);
       toggle = !toggle;
     }
-    ctx.lineTo(width, y);
-    ctx.lineTo(width, y + height * 2);
-    ctx.lineTo(x, y + height * 2);
-    ctx.closePath();
+    ctx.lineTo(width, y - height);
+    ctx.lineTo(0, y - height);
   }
+  ctx.closePath();
   ctx.fill();
 }
 
+// === Textumbruch ===
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
-  const lines = [];
-  let currentLine = '';
+  let lines = [], currentLine = '';
 
   for (const word of words) {
     const testLine = currentLine ? currentLine + ' ' + word : word;
@@ -113,6 +127,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
         lines.push(currentLine);
         currentLine = word;
       } else {
+        // letzte Zeile abschneiden mit ...
         let trimmed = currentLine;
         while (ctx.measureText(trimmed + '...').width > maxWidth && trimmed.length > 0) {
           trimmed = trimmed.slice(0, -1);
