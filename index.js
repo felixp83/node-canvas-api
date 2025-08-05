@@ -14,7 +14,7 @@ const outline = require('./templates/03_outline');
 const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const quadrat = require('./templates/04_Quadrat');
 const zeitung = require('./templates/05_Zeitung');
-const fresh = require('./templates/05_Fresh');
+const fresh = require('./templates/06_Fresh');
 
 const app = express();
 const port = process.env.PORT || 3000;
