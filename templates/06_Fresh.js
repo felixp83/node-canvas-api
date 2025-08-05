@@ -1,113 +1,173 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
+module.exports = async function generateFreshTemplate(
+  img,
+  overlayText,
+  targetWidth,
+  targetHeight,
+  website
+) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Layout-Bereiche ===
-  const topBoxHeight = targetHeight * 0.12;
-  const textAreaHeight = targetHeight * 0.25;
-  const imageAreaY = topBoxHeight + textAreaHeight;
-  const imageAreaHeight = targetHeight - imageAreaY - topBoxHeight * 0.5;
-
   // === Hintergrund weiß ===
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === CTA in grünem Kasten oben ===
-  const ctaText = 'JETZT MERKEN';
-  const ctaFontSize = Math.floor(topBoxHeight * 0.35);
-  const ctaPadding = 20;
-
-  const ctaTextWidth = measureTextWidth(ctx, ctaText, `bold ${ctaFontSize}px "Open Sans"`);
-  const ctaBoxWidth = ctaTextWidth + ctaPadding * 2;
-  const ctaBoxHeight = ctaFontSize * 1.6;
-  const ctaBoxX = (targetWidth - ctaBoxWidth) / 2;
-  const ctaBoxY = (topBoxHeight - ctaBoxHeight) / 2;
-
-  ctx.fillStyle = '#7ac66c';
-  roundRect(ctx, ctaBoxX, ctaBoxY, ctaBoxWidth, ctaBoxHeight, 12, true, false);
-
-  ctx.fillStyle = '#ffffff';
+  // === CTA-Kapsel oben ===
+  const ctaText = 'Jetzt merken';
+  const ctaFontSize = 48;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
+  const ctaWidth = ctx.measureText(ctaText).width + 60;
+  const ctaHeight = ctaFontSize * 1.6;
+  const ctaX = (targetWidth - ctaWidth) / 2;
+  const ctaY = 80;
+
+  ctx.fillStyle = '#75C47E';
+  roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(ctaText, targetWidth / 2, ctaBoxY + ctaBoxHeight / 2);
+  ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
-  // === Headline & Subline Textbereich ===
-  const headline = overlayText.split('\n')[0] || 'Titel';
-  const subline = overlayText.split('\n')[1] || 'Untertitel';
+  // === Bild zeichnen ===
+  const imgMargin = 80;
+  const imgY = ctaY + ctaHeight + 60;
+  const imgHeight = targetHeight - imgY - 200;
+  ctx.drawImage(img, imgMargin, imgY, targetWidth - imgMargin * 2, imgHeight);
 
-  ctx.fillStyle = '#3b2e2a';
-  ctx.font = `bold ${Math.floor(textAreaHeight * 0.18)}px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText(headline, targetWidth / 2, topBoxHeight + 10);
+  // === Textoverlay vorbereiten ===
+  const padding = 20;
+  const maxTextWidth = targetWidth * 0.8;
+  const maxTextBlockHeight = targetHeight * 0.25;
+  const maxLines = 2;
 
-  ctx.font = `normal ${Math.floor(textAreaHeight * 0.12)}px "Open Sans"`;
-  ctx.fillStyle = '#3b2e2a';
-  ctx.fillText(subline, targetWidth / 2, topBoxHeight + textAreaHeight * 0.5);
+  let chosenFontSize = 16;
+  let lines = [];
+  let lineHeight = 0;
 
-  // === Bild ===
-  let sSize, sx, sy;
-  if (img.width > img.height) {
-    sSize = img.height;
-    sx = (img.width - sSize) / 2;
-    sy = 0;
-  } else {
-    sSize = img.width;
-    sx = 0;
-    sy = (img.height - sSize) / 2;
+  for (let size = 128; size >= 16; size -= 2) {
+    ctx.font = `900 ${size}px "Open Sans"`;
+    lineHeight = size * 1.3;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = testLines.length * lineHeight;
+    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+    const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+    if (
+      testLines.length <= maxLines &&
+      totalTextHeight <= maxTextBlockHeight &&
+      joined === original
+    ) {
+      chosenFontSize = size;
+      lines = testLines;
+      break;
+    }
   }
 
-  ctx.drawImage(img, sx, sy, sSize, sSize, 0, imageAreaY, targetWidth, imageAreaHeight);
+  if (lines.length === 0) {
+    ctx.font = `900 16px "Open Sans"`;
+    lineHeight = 16 * 1.3;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+  }
 
-  // === Footer URL ===
+  // === Textbox berechnen ===
+  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
+  const totalTextHeight = lines.length * lineHeight;
+  const textY = imgY + imgHeight / 2 - totalTextHeight / 2;
+
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  lines.forEach((line, index) => {
+    ctx.fillText(line, targetWidth / 2, textY + index * lineHeight);
+  });
+
+  // === Website unten ===
   const urlText = website || 'www.superduperseite.de';
-  const urlFontSize = Math.floor(topBoxHeight * 0.25);
-  ctx.fillStyle = '#ffffff';
-  const urlBoxWidth = measureTextWidth(ctx, urlText, `bold ${urlFontSize}px "Open Sans"`) + 40;
-  const urlBoxHeight = urlFontSize * 1.6;
-  const urlBoxY = targetHeight - urlBoxHeight - 16;
-
-  ctx.fillStyle = '#7ac66c';
-  roundRect(ctx, (targetWidth - urlBoxWidth) / 2, urlBoxY, urlBoxWidth, urlBoxHeight, 10, true, false);
-
-  ctx.fillStyle = '#ffffff';
+  const urlFontSize = 42;
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  const urlWidth = ctx.measureText(urlText).width + 60;
+  const urlHeight = urlFontSize * 1.6;
+  const urlX = (targetWidth - urlWidth) / 2;
+  const urlY = targetHeight - urlHeight - 60;
+
+  ctx.fillStyle = '#75C47E';
+  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(urlText, targetWidth / 2, urlBoxY + urlBoxHeight / 2);
+  ctx.fillText(urlText.toUpperCase(), targetWidth / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
 
-function measureTextWidth(ctx, text, font) {
-  ctx.font = font;
-  return ctx.measureText(text).width;
+// === Hilfsfunktionen ===
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-  if (typeof radius === 'number') {
-    radius = { tl: radius, tr: radius, br: radius, bl: radius };
-  } else {
-    const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
-    for (let side in defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
+function breakLongWord(ctx, word, maxWidth) {
+  let parts = [], current = '';
+  for (let char of word) {
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (current.length > 0) {
+        parts.push(current + '-');
+        current = char;
+      } else {
+        parts.push(char);
+        current = '';
+      }
+    } else {
+      current = test;
     }
   }
-  ctx.beginPath();
-  ctx.moveTo(x + radius.tl, y);
-  ctx.lineTo(x + width - radius.tr, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-  ctx.lineTo(x + width, y + height - radius.br);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
-  ctx.lineTo(x + radius.bl, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-  ctx.lineTo(x, y + radius.tl);
-  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
-  ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
+  if (current.length > 0) parts.push(current);
+  return parts;
 }
 
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = text.split(' ');
+  let lines = [], currentLine = '';
+
+  for (let word of words) {
+    if (ctx.measureText(word).width > maxWidth) {
+      const broken = breakLongWord(ctx, word, maxWidth);
+      for (let part of broken) {
+        if (currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+        lines.push(part);
+        if (lines.length === maxLines) return lines;
+      }
+      continue;
+    }
+
+    const testLine = currentLine ? currentLine + ' ' + word : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+      if (lines.length === maxLines) return lines;
+    }
+  }
+
+  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+  return lines;
+}
