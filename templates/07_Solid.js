@@ -11,7 +11,7 @@ module.exports = async function generateSolidTemplate(
   const ctx = canvas.getContext('2d');
 
   // === Hintergrund in kräftiger Farbe ===
-  ctx.fillStyle = '#FF6F61';
+  ctx.fillStyle = '#d5aa82';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Bild als Kreis ===
