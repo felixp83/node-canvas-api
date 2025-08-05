@@ -13,6 +13,7 @@ const verspielt = require('./templates/02_Verspielt');
 const outline = require('./templates/03_outline');
 const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const quadrat = require('./templates/04_Quadrat');
+const quadrat = require('./templates/05_Zeitung');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -360,6 +361,41 @@ app.post('/quadrat', async (req, res) => {
     const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-quadrat-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+  // Neue Route: Zeitung Template
+app.post('/zeitung', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-zeitung-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
