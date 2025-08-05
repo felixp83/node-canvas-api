@@ -99,7 +99,7 @@ module.exports = async function generateFreshTemplate(
       drawWidth = targetWidth;
       drawHeight = targetWidth / imgAspect;
       drawX = 0;
-      drawY = imgY - (drawHeight - imgHeight) / 2;
+      drawY = imgY;
     }
 
     ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
