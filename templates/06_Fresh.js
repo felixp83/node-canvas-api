@@ -54,7 +54,7 @@ module.exports = async function generateFreshTemplate(
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  const textY = topWhiteHeight / 2 - totalTextHeight / 2 + 40;
+  const textY = topWhiteHeight / 2 - totalTextHeight / 2 + 55;
 
   ctx.fillStyle = '#3B2F2F';
   ctx.textAlign = 'center';
