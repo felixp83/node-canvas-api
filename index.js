@@ -15,6 +15,7 @@ const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const quadrat = require('./templates/04_Quadrat');
 const zeitung = require('./templates/05_Zeitung');
 const fresh = require('./templates/06_Fresh');
+const solid = require('./templates/07_solid');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -447,7 +448,44 @@ app.post('/fresh', async (req, res) => {
   } catch (error) {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
-  } 
+  }
+});
+
+// Neue Route: Solid Template
+app.post('/solid', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await solid(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-solid-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
 });
 
 app.listen(port, () => {
