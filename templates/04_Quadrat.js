@@ -5,7 +5,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const ctx = canvas.getContext('2d');
 
   // === Hintergrund ===
-  ctx.fillStyle = '#f5f0e6';
+  ctx.fillStyle = '##d1dcd8';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Bildbereich (quadratisch, max 2/3 Höhe) ===
