@@ -12,8 +12,8 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Abrisskante oben === (sichtbare Zickzack-Linie)
-  drawTornLine(ctx, 0, topWhiteHeight, targetWidth, 20, '#999');
+  // === Abrisskante oben === (gezackte Fläche)
+  drawTornEdge(ctx, 0, topWhiteHeight, targetWidth, 25, 20, false);
 
   // === Call to Action ===
   ctx.fillStyle = '#000';
@@ -56,9 +56,9 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, startY + i * lineHeight);
   });
 
-  // === Abrisskante unten === (sichtbare Zickzack-Linie)
+  // === Abrisskante unten === (gezackte Fläche)
   const bottomY = targetHeight - bottomWhiteHeight;
-  drawTornLine(ctx, 0, bottomY, targetWidth, 20, '#999');
+  drawTornEdge(ctx, 0, bottomY, targetWidth, 25, 20, true);
 
   // === Website URL ===
   const urlText = website || 'www.montessori-helden.de';
@@ -72,18 +72,31 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   return canvas;
 };
 
-// === Sichtbare Zickzack-Linie statt Fläche ===
-function drawTornLine(ctx, x, y, width, height, color = '#000') {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+// === Gezackte Abrisskante als gefüllte Fläche ===
+function drawTornEdge(ctx, x, y, width, height, zigzagWidth, flip = false) {
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.moveTo(x, y);
-  let toggle = true;
-  for (let i = 0; i <= width; i += height) {
-    ctx.lineTo(i, toggle ? y + height : y);
-    toggle = !toggle;
+  if (!flip) {
+    ctx.moveTo(x, y);
+    let toggle = true;
+    for (let i = 0; i <= width; i += zigzagWidth) {
+      ctx.lineTo(i, toggle ? y + height : y);
+      toggle = !toggle;
+    }
+    ctx.lineTo(width, y + height * 2);
+    ctx.lineTo(x, y + height * 2);
+  } else {
+    ctx.moveTo(x, y + height);
+    let toggle = true;
+    for (let i = 0; i <= width; i += zigzagWidth) {
+      ctx.lineTo(i, toggle ? y : y + height);
+      toggle = !toggle;
+    }
+    ctx.lineTo(width, y - height);
+    ctx.lineTo(x, y - height);
   }
-  ctx.stroke();
+  ctx.closePath();
+  ctx.fill();
 }
 
 function wrapText(ctx, text, maxWidth, maxLines) {
