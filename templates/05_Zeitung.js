@@ -4,17 +4,89 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Hintergrund ===
-  ctx.fillStyle = '#f5f0e6';
+  // === Farben ===
+  const white = '#fff';
+  const bgColor = '#f5f0e6';
+  const textColor = '#000';
+
+  // === Bereiche ===
+  const topHeight = targetHeight * 0.18;
+  const bottomHeight = targetHeight * 0.15;
+  const titleBarHeight = targetHeight * 0.15;
+
+  // === Hintergrundgrundfarbe (für Bildbereich) ===
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild (vollflächig, unter der oberen weißen Fläche und über der unteren) ===
-  const topHeight = targetHeight * 0.18;    // 18% oben
-  const bottomHeight = targetHeight * 0.15; // 15% unten
-  const imageHeight = targetHeight - topHeight - bottomHeight;
+  // --- Obere weiße Fläche ---
+  ctx.fillStyle = white;
+  ctx.fillRect(0, 0, targetWidth, topHeight);
 
-  // Zuschneiden für quadratisches Bild (mittig)
-  let sSize, sx, sy;
+  // --- Abgerissene Kante unten an oberem weißen Bereich ---
+  drawTornEdge(ctx, 0, topHeight, targetWidth, 10, 15);
+
+  // --- CTA Text "JETZT ANSCHAUEN" in Schwarz, zentriert, mittig in oberem Bereich ---
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const ctaFontSize = Math.floor(topHeight * 0.4);
+  ctx.font = `bold ${ctaFontSize}px "Open Sans", sans-serif`;
+  ctx.fillText('JETZT ANSCHAUEN', targetWidth / 2, topHeight / 2);
+
+  // --- Unterer weißer Bereich ---
+  const bottomY = targetHeight - bottomHeight;
+  ctx.fillStyle = white;
+  ctx.fillRect(0, bottomY, targetWidth, bottomHeight);
+
+  // --- Abgerissene Kante oben am unteren weißen Bereich ---
+  drawTornEdge(ctx, 0, bottomY, targetWidth, 10, 15, true);
+
+  // --- URL unten mittig ---
+  const urlFontSize = Math.floor(bottomHeight * 0.4);
+  ctx.fillStyle = textColor;
+  ctx.font = `normal ${urlFontSize}px "Open Sans", sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(website || 'www.montessori-helden.de', targetWidth / 2, bottomY + bottomHeight / 2);
+
+  // --- Halbtransparenter weißer Balken für Haupttitel ---
+  const titleBarY = topHeight + (targetHeight - topHeight - bottomHeight) / 2 - titleBarHeight / 2;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillRect(0, titleBarY, targetWidth, titleBarHeight);
+
+  // --- Haupttitel Text ---
+  ctx.fillStyle = '#5b4636';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Schriftgröße dynamisch anpassen, max 3 Zeilen
+  const maxWidth = targetWidth * 0.9;
+  let chosenFontSize = titleBarHeight * 0.5;
+  ctx.font = `900 ${chosenFontSize}px "Open Sans", sans-serif`;
+
+  let lines = wrapText(ctx, overlayText, maxWidth, 3);
+  while (lines.length * chosenFontSize * 1.2 > titleBarHeight) {
+    chosenFontSize -= 2;
+    ctx.font = `900 ${chosenFontSize}px "Open Sans", sans-serif`;
+    lines = wrapText(ctx, overlayText, maxWidth, 3);
+    if (chosenFontSize < 12) break; // Minimum Schriftgröße
+  }
+
+  const totalTextHeight = lines.length * chosenFontSize * 1.2;
+  let textStartY = titleBarY + (titleBarHeight - totalTextHeight) / 2 + chosenFontSize * 0.1;
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], targetWidth / 2, textStartY + i * chosenFontSize * 1.2);
+  }
+
+  // --- Bildbereich dazwischen (zwischen oberem weißen Bereich + Titelbalken und unterem weißen Bereich) ---
+  const imageAreaYStart = topHeight;
+  const imageAreaYEnd = bottomY;
+  const imageAreaHeight = imageAreaYEnd - imageAreaYStart;
+
+  // Bild quadratisch skalieren, max Höhe = imageAreaHeight
+  const maxImgSize = Math.min(targetWidth, imageAreaHeight);
+  let sx, sy, sSize;
   if (img.width > img.height) {
     sSize = img.height;
     sx = (img.width - sSize) / 2;
@@ -25,91 +97,36 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     sy = (img.height - sSize) / 2;
   }
 
-  ctx.drawImage(img, sx, sy, sSize, sSize, 0, topHeight, targetWidth, imageHeight);
+  const dx = (targetWidth - maxImgSize) / 2;
+  const dy = imageAreaYStart + (imageAreaHeight - maxImgSize) / 2;
 
-  // === Obere weiße Fläche (18%) mit "abgerissener" Kante unten ===
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, targetWidth, topHeight);
-
-  // Abgerissene Kante - unten der oberen Fläche (gezackte Linie)
-  drawTornEdge(ctx, 0, topHeight - 8, targetWidth, 8, 15);
-
-  // Call to Action Text "JETZT ANSCHAUEN"
-  ctx.fillStyle = '#000';
-  const ctaFontSize = Math.floor(topHeight * 0.35);
-  ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText("JETZT ANSCHAUEN", targetWidth / 2, topHeight / 2);
-
-  // === Weiß-transparenter Balken für Haupttitel direkt unter dem oberen Bereich ===
-  const overlayBarHeight = topHeight * 0.8;
-  const overlayBarY = topHeight + 10;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-  ctx.fillRect(0, overlayBarY, targetWidth, overlayBarHeight);
-
-  // Haupttitel (Overlay Text)
-  ctx.fillStyle = '#5b4636';
-  const maxOverlayFontSize = overlayBarHeight * 0.7;
-  ctx.font = `900 ${maxOverlayFontSize}px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  // Text umbrechen, max 2 Zeilen
-  let lines = wrapText(ctx, overlayText, targetWidth * 0.9, 2);
-  const lineHeight = maxOverlayFontSize * 1.2;
-  const textBlockHeight = lines.length * lineHeight;
-  const textStartY = overlayBarY + (overlayBarHeight - textBlockHeight) / 2;
-
-  lines.forEach((line, i) => {
-    ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight + lineHeight / 2);
-  });
-
-  // === Untere weiße Fläche (15%) mit URL und abgerissener Kante oben ===
-  const footerY = targetHeight - bottomHeight;
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, footerY, targetWidth, bottomHeight);
-
-  // Abgerissene Kante - oben der unteren Fläche
-  drawTornEdge(ctx, 0, footerY, targetWidth, 8, 15, true);
-
-  // URL Text
-  const urlText = website || "www.montessori-helden.de";
-  ctx.fillStyle = '#5b4636';
-  const urlFontSize = Math.floor(bottomHeight * 0.4);
-  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(urlText, targetWidth / 2, footerY + bottomHeight / 2);
+  ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, maxImgSize, maxImgSize);
 
   return canvas;
 };
 
-// Hilfsfunktion: Zeichnet eine gezackte "abgerissene" Kante
-// x,y = Startpunkt, width = Breite, height = Höhe der Zacken, zigzagCount = Anzahl Zacken
-// flip=true => Zacken oben (für Fußzeile)
-function drawTornEdge(ctx, x, y, width, height, zigzagCount, flip = false) {
-  const segmentWidth = width / zigzagCount;
-  ctx.fillStyle = '#fff';
-
+// === Hilfsfunktion: gezackte abgerissene Kante zeichnen ===
+// Wenn invert = true, wird Zackenkante nach oben gezeichnet (für unteren weißen Bereich)
+function drawTornEdge(ctx, x, y, width, amplitude, segmentWidth, invert = false) {
+  ctx.fillStyle = '#f5f0e6'; // Hintergrundfarbe, um "abgerissen" Effekt zu erzeugen
   ctx.beginPath();
-  if (!flip) {
+
+  if (!invert) {
+    // von links nach rechts unten
     ctx.moveTo(x, y);
-    for (let i = 0; i < zigzagCount; i++) {
-      const px = x + i * segmentWidth;
-      ctx.lineTo(px + segmentWidth / 2, y + height * (i % 2 === 0 ? 1 : 0));
-      ctx.lineTo(px + segmentWidth, y);
+    for (let i = 0; i < width; i += segmentWidth) {
+      ctx.lineTo(x + i, y + (i / segmentWidth) % 2 === 0 ? amplitude : 0);
     }
-    ctx.lineTo(x + width, y + height);
-    ctx.lineTo(x, y + height);
+    ctx.lineTo(x + width, y);
+    ctx.lineTo(x + width, y + amplitude + 10);
+    ctx.lineTo(x, y + amplitude + 10);
   } else {
-    // Für Fußzeile oben gezackt
-    ctx.moveTo(x, y + height);
-    for (let i = 0; i < zigzagCount; i++) {
-      const px = x + i * segmentWidth;
-      ctx.lineTo(px + segmentWidth / 2, y + height * (i % 2 === 0 ? 0 : 1));
-      ctx.lineTo(px + segmentWidth, y + height);
+    // von links nach rechts oben
+    ctx.moveTo(x, y + amplitude + 10);
+    for (let i = 0; i < width; i += segmentWidth) {
+      ctx.lineTo(x + i, y + (i / segmentWidth) % 2 === 0 ? 0 : amplitude);
     }
+    ctx.lineTo(x + width, y + amplitude + 10);
     ctx.lineTo(x + width, y);
     ctx.lineTo(x, y);
   }
@@ -117,55 +134,24 @@ function drawTornEdge(ctx, x, y, width, height, zigzagCount, flip = false) {
   ctx.fill();
 }
 
-// === Textumbruch, ähnlich zu deinem Original ===
-function breakLongWord(ctx, word, maxWidth) {
-  let parts = [], current = '';
-  for (let char of word) {
-    const test = current + char;
-    if (ctx.measureText(test).width > maxWidth) {
-      if (current.length > 0) {
-        parts.push(current + '-');
-        current = char;
-      } else {
-        parts.push(char);
-        current = '';
-      }
-    } else {
-      current = test;
-    }
-  }
-  if (current.length > 0) parts.push(current);
-  return parts;
-}
-
+// === Text Wrapper (max Zeilen und max Breite) ===
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
-  let lines = [], currentLine = '';
+  let lines = [];
+  let currentLine = '';
 
   for (let word of words) {
-    if (ctx.measureText(word).width > maxWidth) {
-      const broken = breakLongWord(ctx, word, maxWidth);
-      for (let part of broken) {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = '';
-        }
-        lines.push(part);
-        if (lines.length === maxLines) return lines;
-      }
-      continue;
-    }
-
     const testLine = currentLine ? currentLine + ' ' + word : word;
     if (ctx.measureText(testLine).width <= maxWidth) {
       currentLine = testLine;
     } else {
-      lines.push(currentLine);
+      if (currentLine) lines.push(currentLine);
       currentLine = word;
-      if (lines.length === maxLines) return lines;
+      if (lines.length === maxLines) break;
     }
   }
-
   if (currentLine && lines.length < maxLines) lines.push(currentLine);
+
+  if (lines.length > maxLines) lines = lines.slice(0, maxLines);
   return lines;
 }
