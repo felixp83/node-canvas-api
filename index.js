@@ -1,4 +1,4 @@
-const express = require('express');
+tunconst express = require('express');
 const { loadImage, registerFont } = require('canvas');
 const path = require('path');
 const fs = require('fs');
@@ -394,7 +394,7 @@ app.post('/zeitung', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
+    const canvas = await zeitung(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-zeitung-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
