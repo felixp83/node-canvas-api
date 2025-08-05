@@ -13,7 +13,7 @@ const verspielt = require('./templates/02_Verspielt');
 const outline = require('./templates/03_outline');
 const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const quadrat = require('./templates/04_Quadrat');
-const quadrat = require('./templates/05_Zeitung');
+const zeitung = require('./templates/05_Zeitung');
 
 const app = express();
 const port = process.env.PORT || 3000;
