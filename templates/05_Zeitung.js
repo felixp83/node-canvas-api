@@ -4,26 +4,27 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  const topHeight = targetHeight * 0.18;
-  const bottomHeight = targetHeight * 0.15;
-  const imageHeight = targetHeight - topHeight - bottomHeight;
+  // === Layout Parameter ===
+  const topWhiteHeight = targetHeight * 0.18;
+  const bottomWhiteHeight = targetHeight * 0.15;
+  const middleHeight = targetHeight - topWhiteHeight - bottomWhiteHeight;
 
-  // Hintergrund weiß
+  // === Hintergrund weiß ===
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // Obere abgerissene Kante
-  drawTornEdge(ctx, 0, topHeight - 8, targetWidth, 16, 12);
+  // === Obere Abrisskante ===
+  drawTornEdge(ctx, 0, topWhiteHeight - 10, targetWidth, 20, 16);
 
-  // Call to Action oben
+  // === Call to Action oben ===
   ctx.fillStyle = '#000';
-  const ctaFontSize = Math.floor(topHeight * 0.3);
+  const ctaFontSize = Math.floor(topWhiteHeight * 0.3);
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('JETZT ANSCHAUEN', targetWidth / 2, topHeight / 2);
+  ctx.fillText('JETZT ANSCHAUEN', targetWidth / 2, topWhiteHeight / 2);
 
-  // Bild platzieren
+  // === Bildbereich mittig ===
   let sSize, sx, sy;
   if (img.width > img.height) {
     sSize = img.height;
@@ -34,45 +35,40 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     sx = 0;
     sy = (img.height - sSize) / 2;
   }
-  ctx.drawImage(img, sx, sy, sSize, sSize, 0, topHeight, targetWidth, imageHeight);
 
-  // Transparenter Balken für overlayText
-  const titleBarHeight = imageHeight * 0.15;
-  const barY = topHeight + imageHeight / 2 - titleBarHeight / 2;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  ctx.fillRect(0, barY, targetWidth, titleBarHeight);
+  ctx.drawImage(img, sx, sy, sSize, sSize, 0, topWhiteHeight, targetWidth, middleHeight);
 
-  // OverlayText (z. B. Haupttitel)
+  // === Titelbalken über Bild ===
+  const titleBarHeight = middleHeight * 0.18;
+  const titleBarY = topWhiteHeight + middleHeight / 2 - titleBarHeight / 2;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillRect(0, titleBarY, targetWidth, titleBarHeight);
+
   ctx.fillStyle = '#000';
-  ctx.font = `bold 36px "Open Sans"`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
   const maxTitleWidth = targetWidth * 0.9;
+  ctx.font = `bold 36px "Open Sans"`;
   const lines = wrapText(ctx, overlayText, maxTitleWidth, 2);
   const lineHeight = 40;
-  const startY = barY + titleBarHeight / 2 - (lines.length - 1) * lineHeight / 2;
+  const titleStartY = titleBarY + (titleBarHeight - lineHeight * lines.length) / 2;
   lines.forEach((line, i) => {
-    ctx.fillText(line, targetWidth / 2, startY + i * lineHeight);
+    ctx.fillText(line, targetWidth / 2, titleStartY + i * lineHeight);
   });
 
-  // Untere abgerissene Kante
-  const bottomY = targetHeight - bottomHeight;
-  drawTornEdge(ctx, 0, bottomY, targetWidth, 16, 12, true);
+  // === Untere Abrisskante ===
+  const bottomY = targetHeight - bottomWhiteHeight;
+  drawTornEdge(ctx, 0, bottomY, targetWidth, 20, 16, true);
 
-  // URL unten mittig
-  const url = (website || 'www.montessori-helden.de').toUpperCase();
-  const urlFontSize = Math.floor(bottomHeight * 0.3);
+  // === URL unten ===
+  const urlText = website || 'www.montessori-helden.de';
   ctx.fillStyle = '#000';
+  const urlFontSize = Math.floor(bottomWhiteHeight * 0.22);
   ctx.font = `normal ${urlFontSize}px "Open Sans"`;
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(url, targetWidth / 2, bottomY + bottomHeight / 2);
+  ctx.fillText(urlText, targetWidth / 2, bottomY + bottomWhiteHeight / 2);
 
   return canvas;
 };
 
-// Abgerissene Kante zeichnen (oben oder unten)
 function drawTornEdge(ctx, x, y, width, height, zigzagSize, topEdge = false) {
   ctx.fillStyle = '#fff';
   ctx.beginPath();
@@ -102,7 +98,6 @@ function drawTornEdge(ctx, x, y, width, height, zigzagSize, topEdge = false) {
   ctx.fill();
 }
 
-// Text umbrechen (max. 2 Zeilen)
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   const lines = [];
@@ -127,7 +122,6 @@ function wrapText(ctx, text, maxWidth, maxLines) {
       }
     }
   }
-
   if (currentLine) lines.push(currentLine);
   return lines;
 }
