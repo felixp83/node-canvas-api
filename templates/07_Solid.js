@@ -17,7 +17,7 @@ module.exports = async function generateSolidTemplate(
   // === Bild als Kreis ===
   const radius = Math.min(targetWidth, targetHeight) * 0.35;
   const centerX = targetWidth / 2;
-  const centerY = targetHeight * 0.35;
+  const centerY = targetHeight * 0.38;
 
   ctx.save();
   ctx.beginPath();
@@ -44,6 +44,24 @@ module.exports = async function generateSolidTemplate(
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius + ctx.lineWidth / 2, 0, Math.PI * 2);
   ctx.stroke();
+
+  // === CTA-Button (weiß mit roter Schrift) ===
+  const ctaText = 'JETZT BESUCHEN';
+  const ctaFontSize = 38;
+  ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
+  const ctaWidth = ctx.measureText(ctaText).width + 80;
+  const ctaHeight = ctaFontSize * 1.6;
+  const ctaX = (targetWidth - ctaWidth) / 2;
+  const ctaY = centerY - radius - ctaHeight - 40;
+
+  ctx.fillStyle = '#fff';
+  roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#D32F2F';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
   // === Text vorbereiten ===
   const maxTextWidth = targetWidth * 0.8;
@@ -80,7 +98,7 @@ module.exports = async function generateSolidTemplate(
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  const textY = centerY + radius + 40;
+  const textY = centerY + radius + 55;
 
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
@@ -89,11 +107,11 @@ module.exports = async function generateSolidTemplate(
     ctx.fillText(line, centerX, textY + index * lineHeight);
   });
 
-  // === Website unten ===
-  const urlText = website || 'www.superduperseite.de';
+  // === Website unten mit breiterem rosa Bereich ===
+  const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
   const urlFontSize = 42;
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
-  const urlWidth = ctx.measureText(urlText).width + 60;
+  const urlWidth = ctx.measureText(urlText).width + 160;
   const urlHeight = urlFontSize * 1.6;
   const urlX = (targetWidth - urlWidth) / 2;
   const urlY = targetHeight - urlHeight - 60;
@@ -105,7 +123,7 @@ module.exports = async function generateSolidTemplate(
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(urlText.toUpperCase(), targetWidth / 2, urlY + urlHeight / 2);
+  ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
