@@ -21,46 +21,58 @@ module.exports = async function generateFreshTemplate(
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = topWhiteHeight * 0.5;
-  const maxLines = 2;
 
-  let chosenFontSize = 16;
-  let lines = [];
-  let lineHeight = 0;
+  let bestConfig = {
+    fontSize: 16,
+    lines: [overlayText],
+    lineHeight: 0,
+    totalHeight: Infinity
+  };
 
   for (let size = 128; size >= 16; size -= 2) {
     ctx.font = `900 ${size}px "Open Sans"`;
-    lineHeight = size * 1.3;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-    const totalTextHeight = testLines.length * lineHeight;
-    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
-    const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
-    if (
-      testLines.length <= maxLines &&
-      totalTextHeight <= maxTextBlockHeight &&
-      joined === original
-    ) {
-      chosenFontSize = size;
-      lines = testLines;
-      break;
+    const lineHeight = size * 1.3;
+
+    for (let maxLines of [2, 3]) {
+      const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+      const totalTextHeight = testLines.length * lineHeight;
+
+      const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+      const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+
+      if (
+        testLines.length <= maxLines &&
+        totalTextHeight <= maxTextBlockHeight &&
+        joined === original &&
+        size > bestConfig.fontSize
+      ) {
+        bestConfig = {
+          fontSize: size,
+          lines: testLines,
+          lineHeight,
+          totalHeight: totalTextHeight
+        };
+      }
     }
   }
 
-  if (lines.length === 0) {
-    ctx.font = `900 32px "Open Sans"`;
-    chosenFontSize = 32;
-    lineHeight = 32 * 1.3;
-    lines = [overlayText];
+  if (bestConfig.lines.length === 0) {
+    bestConfig = {
+      fontSize: 32,
+      lines: [overlayText],
+      lineHeight: 32 * 1.3,
+      totalHeight: 32 * 1.3
+    };
   }
 
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
-  const totalTextHeight = lines.length * lineHeight;
-  const textY = topWhiteHeight / 2 - totalTextHeight / 2 + 55;
+  ctx.font = `900 ${bestConfig.fontSize}px "Open Sans"`;
+  const textY = topWhiteHeight / 2 - bestConfig.totalHeight / 2 + 55;
 
   ctx.fillStyle = '#3B2F2F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  lines.forEach((line, index) => {
-    ctx.fillText(line, targetWidth / 2, textY + index * lineHeight);
+  bestConfig.lines.forEach((line, index) => {
+    ctx.fillText(line, targetWidth / 2, textY + index * bestConfig.lineHeight);
   });
 
   // === CTA-Kapsel oben (im weißen Bereich) ===
@@ -113,7 +125,7 @@ module.exports = async function generateFreshTemplate(
   const urlWidth = ctx.measureText(urlText).width + 100;
   const urlHeight = urlFontSize * 1.6;
   const urlX = (targetWidth - urlWidth) / 2;
-  const urlY = targetHeight - urlHeight - 55; // 15px höher
+  const urlY = targetHeight - urlHeight - 55;
 
   ctx.fillStyle = '#3c6bd2';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
