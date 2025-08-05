@@ -13,7 +13,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Abrisskante oben ===
-  drawTornEdge(ctx, 0, topWhiteHeight - 10, targetWidth, 20, 14);
+  drawTornEdge(ctx, 0, topWhiteHeight - 100, targetWidth, 80, 14);
 
   // === Call to Action ===
   ctx.fillStyle = '#000';
@@ -58,7 +58,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Abrisskante unten ===
   const bottomY = targetHeight - bottomWhiteHeight;
-  drawTornEdge(ctx, 0, bottomY, targetWidth, 20, 14, true);
+  drawTornEdge(ctx, 0, bottomY, targetWidth, 60, 14, true);
 
   // === Website URL ===
   const urlText = website || 'www.montessori-helden.de';
