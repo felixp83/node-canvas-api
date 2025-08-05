@@ -69,7 +69,6 @@ module.exports = async function generateFreshTemplate(
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Headline Position ===
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
   const textY = ctaY + ctaHeight + 40;
@@ -84,45 +83,45 @@ module.exports = async function generateFreshTemplate(
   // === Bild ===
   const imgY = topWhiteHeight;
   const imgHeight = targetHeight - topWhiteHeight;
-  const imgAspect = img.width / img.height;
-  const canvasAspect = targetWidth / imgHeight;
 
-  let drawWidth, drawHeight, drawX, drawY;
-  if (imgAspect > canvasAspect) {
-    // Bild ist breiter – zuschneiden horizontal
-    drawHeight = imgHeight;
-    drawWidth = imgHeight * imgAspect;
-    drawX = (targetWidth - drawWidth) / 2;
-    drawY = imgY;
-  } else {
-    // Bild ist höher – zuschneiden vertikal
-    drawWidth = targetWidth;
-    drawHeight = targetWidth / imgAspect;
-    drawX = 0;
-    drawY = imgY - (drawHeight - imgHeight) / 2;
+  if (img && img.width && img.height) {
+    const imgAspect = img.width / img.height;
+    const canvasAspect = targetWidth / imgHeight;
+
+    let drawWidth, drawHeight, drawX, drawY;
+    if (imgAspect > canvasAspect) {
+      drawHeight = imgHeight;
+      drawWidth = imgHeight * imgAspect;
+      drawX = (targetWidth - drawWidth) / 2;
+      drawY = imgY;
+    } else {
+      drawWidth = targetWidth;
+      drawHeight = targetWidth / imgAspect;
+      drawX = 0;
+      drawY = imgY - (drawHeight - imgHeight) / 2;
+    }
+
+    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
   }
 
-  ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+  // === Website unten (dynamisch) mit Fallback ===
+  const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
 
-  // === Website unten (dynamisch) ===
-  const urlText = (website || '').toUpperCase();
-  if (urlText) {
-    const urlFontSize = 42;
-    ctx.font = `bold ${urlFontSize}px "Open Sans"`;
-    const urlWidth = ctx.measureText(urlText).width + 100;
-    const urlHeight = urlFontSize * 1.6;
-    const urlX = (targetWidth - urlWidth) / 2;
-    const urlY = targetHeight - urlHeight - 40;
+  const urlFontSize = 42;
+  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  const urlWidth = ctx.measureText(urlText).width + 100;
+  const urlHeight = urlFontSize * 1.6;
+  const urlX = (targetWidth - urlWidth) / 2;
+  const urlY = targetHeight - urlHeight - 40;
 
-    ctx.fillStyle = '#75C47E';
-    roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
-    ctx.fill();
+  ctx.fillStyle = '#75C47E';
+  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
+  ctx.fill();
 
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
-  }
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
