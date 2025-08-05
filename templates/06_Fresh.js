@@ -14,7 +14,7 @@ module.exports = async function generateFreshTemplate(
   const topWhiteHeight = 500;
 
   // === Hintergrund gesplittet: weiß oben, Bild unten ===
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#dfecf2';
   ctx.fillRect(0, 0, targetWidth, topWhiteHeight);
 
   // === Headline vorbereiten ===
@@ -72,7 +72,7 @@ module.exports = async function generateFreshTemplate(
   const ctaX = (targetWidth - ctaWidth) / 2;
   const ctaY = 80;
 
-  ctx.fillStyle = '#75C47E';
+  ctx.fillStyle = '#3c6bd2';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
   ctx.fill();
 
@@ -115,7 +115,7 @@ module.exports = async function generateFreshTemplate(
   const urlX = (targetWidth - urlWidth) / 2;
   const urlY = targetHeight - urlHeight - 55; // 15px höher
 
-  ctx.fillStyle = '#75C47E';
+  ctx.fillStyle = '#3c6bd2';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
   ctx.fill();
 
