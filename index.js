@@ -374,7 +374,8 @@ app.post('/quadrat', async (req, res) => {
   } catch (error) {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
-  }
+  } 
+});
   // Neue Route: Zeitung Template
 app.post('/zeitung', async (req, res) => {
   const imageUrl = req.body.url;
