@@ -15,10 +15,10 @@ module.exports = async function generateFreshTemplate(
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === CTA-Kapsel oben ===
-  const ctaText = 'Jetzt merken';
+  const ctaText = 'JETZT MERKEN';
   const ctaFontSize = 48;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
-  const ctaWidth = ctx.measureText(ctaText).width + 60;
+  const ctaWidth = ctx.measureText(ctaText).width + 100;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
   const ctaY = 80;
@@ -32,13 +32,7 @@ module.exports = async function generateFreshTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
-  // === Bild zeichnen ===
-  const imgMargin = 80;
-  const imgY = ctaY + ctaHeight + 60;
-  const imgHeight = targetHeight - imgY - 200;
-  ctx.drawImage(img, imgMargin, imgY, targetWidth - imgMargin * 2, imgHeight);
-
-  // === Textoverlay vorbereiten ===
+  // === Headline vorbereiten ===
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = targetHeight * 0.25;
@@ -72,26 +66,31 @@ module.exports = async function generateFreshTemplate(
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Textbox berechnen ===
+  // === Headline Position ===
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  const textY = imgY + imgHeight / 2 - totalTextHeight / 2;
+  const textY = ctaY + ctaHeight + 50;
 
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#3B2F2F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   lines.forEach((line, index) => {
     ctx.fillText(line, targetWidth / 2, textY + index * lineHeight);
   });
 
-  // === Website unten ===
-  const urlText = website || 'www.superduperseite.de';
+  // === Bild ===
+  const imgY = textY + totalTextHeight + 60;
+  const imgHeight = targetHeight - imgY;
+  ctx.drawImage(img, 0, imgY, targetWidth, imgHeight);
+
+  // === Website unten (dynamisch) ===
+  const urlText = (website || 'www.superduperseite.de').toUpperCase();
   const urlFontSize = 42;
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
-  const urlWidth = ctx.measureText(urlText).width + 60;
+  const urlWidth = ctx.measureText(urlText).width + 100;
   const urlHeight = urlFontSize * 1.6;
   const urlX = (targetWidth - urlWidth) / 2;
-  const urlY = targetHeight - urlHeight - 60;
+  const urlY = targetHeight - urlHeight - 40;
 
   ctx.fillStyle = '#75C47E';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
@@ -100,7 +99,7 @@ module.exports = async function generateFreshTemplate(
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(urlText.toUpperCase(), targetWidth / 2, urlY + urlHeight / 2);
+  ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
