@@ -47,12 +47,12 @@ module.exports = async function generateSolidTemplate(
 
   // === CTA-Button (weiß mit roter Schrift) ===
   const ctaText = 'JETZT BESUCHEN';
-  const ctaFontSize = 38;
+  const ctaFontSize = 49.4; // 38 * 1.3
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 80;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = centerY - radius - ctaHeight - 40;
+  const ctaY = centerY - radius - ctaHeight - 55; // 40 + 15
 
   ctx.fillStyle = '#fff';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
@@ -98,7 +98,7 @@ module.exports = async function generateSolidTemplate(
 
   ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
   const totalTextHeight = lines.length * lineHeight;
-  const textY = centerY + radius + 55;
+  const textY = centerY + radius + 70;
 
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
