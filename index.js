@@ -489,7 +489,7 @@ app.post('/solid', async (req, res) => {
 });
 
 // Neue Route: VModern Template
-app.post('/solid', async (req, res) => {
+app.post('/vmodern', async (req, res) => {
   const imageUrl = req.body.url;
   const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -506,9 +506,9 @@ app.post('/solid', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await solid(img, overlayText, targetWidth, targetHeight, website);
+    const canvas = await vmodern(img, overlayText, targetWidth, targetHeight, website);
 
-    const filename = `img-solid-${Date.now()}.png`;
+    const filename = `img-vmodern-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
