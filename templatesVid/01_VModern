@@ -15,17 +15,21 @@ module.exports = async function generateTemplateGIF(opts = {}) {
     website = "www.montessori-helden.de",
     width = 1000,           // Pinterest-Format: 1000 px breit
     height = 1500,          // Pinterest-Format: 1500 px hoch
-    fps = 24,
-    durationSec = 3.0,
+    fps = 8,                // ↓ Standard jetzt 8 FPS
+    durationSec = 3.0,      // gewünschte Dauer
     outputPath = './out.gif',
     background = '#ffffff',
     boxColor = 'rgba(42, 37, 26, 0.9)', // aus Videoanalyse
   } = opts;
 
-  const totalFrames = Math.max(1, Math.round(fps * durationSec));
+  // ---- Kappung und effektive Werte ----
+  const effFps = Math.max(1, Math.floor(fps));           // mind. 1 fps
+  const effDuration = Math.min(Number(durationSec) || 0, 3) || 3; // hart auf 3s begrenzt
+  const totalFrames = Math.max(1, Math.round(effFps * effDuration));
+
   const encoder = new GIFEncoder(width, height, 'neuquant', true);
   encoder.start();
-  encoder.setDelay(Math.round(1000 / fps));
+  encoder.setDelay(Math.round(1000 / effFps)); // Delay passend zu effFps
   encoder.setRepeat(0);
   encoder.setQuality(10);
 
@@ -69,7 +73,7 @@ module.exports = async function generateTemplateGIF(opts = {}) {
   }
 
   function wrapText(ctx, text, maxWidth, maxLines) {
-    const words = text.split(' ');
+    const words = (text || '').split(' ');
     let lines = [], currentLine = '';
 
     for (let word of words) {
@@ -146,7 +150,7 @@ module.exports = async function generateTemplateGIF(opts = {}) {
       const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = testLines.length * lineHeight;
       const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
-      const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+      const original = (overlayText || '').replace(/-/g, '').replace(/\s/g, '');
       if (testLines.length <= maxLines &&
           totalTextHeight <= maxTextBlockHeight &&
           joined === original) {
@@ -162,14 +166,13 @@ module.exports = async function generateTemplateGIF(opts = {}) {
     }
 
     const urlFontSize = 48;
-    const urlLineHeight = urlFontSize * 1.3;
 
     ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
     const totalTextHeight = lines.length * lineHeight;
     const urlPaddingTop = padding * 0.6;
 
     const rectWidth = maxTextWidth + padding * 2;
-    const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+    const rectHeight = totalTextHeight + padding * 2 + (urlFontSize * 1.3) + urlPaddingTop;
 
     const verticalPositionFactor = 0.8;
     let rectY = height * verticalPositionFactor - rectHeight / 2;
@@ -194,7 +197,7 @@ module.exports = async function generateTemplateGIF(opts = {}) {
 
   // === Easing ===
   const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-  const easeInOut = t => t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+  const easeInOut = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
 
   // === Animation Frames ===
   for (let frame = 0; frame < totalFrames; frame++) {
