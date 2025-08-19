@@ -44,7 +44,7 @@ module.exports = async function centerCropWithDynamicZoomAndBlur(img) {
 
   // --- Blur einstellen ---
   // "35%" praxisnah interpretiert als ~3,5% der kürzeren Zielseite -> ~35px bei 1000x1500
-  const blurPx = Math.round(Math.min(targetWidth, targetHeight) * 0.035);
+  const blurPx = Math.round(Math.min(targetWidth, targetHeight) * 0.1);
   // node-canvas unterstützt context.filter (ähnlich CSS)
   ctx.filter = `blur(${blurPx}px)`;
 
