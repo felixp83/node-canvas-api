@@ -8,7 +8,7 @@ module.exports = async function bottomLeftCrop(img) {
   const imgWidth = img.width;
   const imgHeight = img.height;
   const imgRatio = imgWidth / imgHeight;
-
+  
   let cropWidth, cropHeight;
 
   if (imgWidth >= targetWidth && imgHeight >= targetHeight) {
@@ -24,8 +24,8 @@ module.exports = async function bottomLeftCrop(img) {
     }
   }
 
-  // Startpunkt für den Zuschnitt (unten links)
-  const sx = 0;
+  // Startpunkt für den Zuschnitt (unten, leicht nach rechts verschoben)
+  const sx = (imgWidth - cropWidth) * 0.25; // 25% weniger Randbeschnitt links
   const sy = imgHeight - cropHeight;
 
   // Canvas auf Zielgröße 1000x1500 setzen
