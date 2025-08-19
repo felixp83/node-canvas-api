@@ -16,7 +16,7 @@ const quadrat = require('./templates/04_Quadrat');
 const zeitung = require('./templates/05_Zeitung');
 const fresh = require('./templates/06_Fresh');
 const solid = require('./templates/07_Solid');
-const vmodern = require('./templatesVid/01_VModern');
+const cropAuto = require('./templatesCrop/06_autoCrop');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -488,8 +488,8 @@ app.post('/solid', async (req, res) => {
   } 
 });
 
-// Neue Route: VModern Template
-app.post('/vmodern', async (req, res) => {
+// Neue Route: autoCrop Template
+app.post('/autoCrop', async (req, res) => {
   const imageUrl = req.body.url;
   const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -506,9 +506,9 @@ app.post('/vmodern', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await vmodern(img, overlayText, targetWidth, targetHeight, website);
+    const canvas = await autoCrop(img, overlayText, targetWidth, targetHeight, website);
 
-    const filename = `img-vmodern-${Date.now()}.png`;
+    const filename = `img-autoCrop-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
