@@ -24,8 +24,8 @@ module.exports = async function bottomRightCrop(img) {
     }
   }
 
-  // Startpunkt für den Zuschnitt (unten rechts)
-  const sx = imgWidth - cropWidth;
+  // Startpunkt für den Zuschnitt (unten, etwas weiter innen von rechts)
+  const sx = (imgWidth - cropWidth) * 0.75; // 25% weniger Randbeschnitt rechts
   const sy = imgHeight - cropHeight;
 
   // Canvas auf Zielgröße 1000x1500 setzen (Hochskalierung hier)
