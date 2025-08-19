@@ -45,8 +45,9 @@ module.exports = async function generateSolidTemplate(
   ctx.restore();
 
   // Weißer Ring um das Bild
+  const ringLineWidth = radius * 0.08;
   ctx.strokeStyle = '#fff';
-  ctx.lineWidth = radius * 0.08;
+  ctx.lineWidth = ringLineWidth;
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius + ctx.lineWidth / 2, 0, Math.PI * 2);
   ctx.stroke();
@@ -87,70 +88,86 @@ module.exports = async function generateSolidTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
-  // === Overlay-Text (dynamisch angepasst) ===
+  // === Overlay-Text (stabiler Umbruch wie im Referenz-Template) ===
   const maxTextWidth = targetWidth * 0.8;
-  const maxLines = 3;
 
   // Abstände
-  const gapAboveText = 24; // Abstand unterhalb Kreis
-  const gapAboveUrl = 24;  // Abstand oberhalb Website-Bereich
+  const minGapToCircle = 20;  // mindestens 20 px Abstand zum äußeren Kreisrand
+  const gapAboveUrl = 24;     // Abstand oberhalb Website-Bereich
 
-  // Bereich zwischen Kreisunterkante und Website-Bereich
-  const topLimit = centerY + radius + gapAboveText;
+  // Außenradius inkl. halber Ringbreite
+  const outerRadius = radius + ringLineWidth / 2;
+
+  // Vertikaler Bereich zwischen Kreis und Website-Bereich
+  const topLimit = centerY + outerRadius + minGapToCircle;
   const bottomLimit = urlY - gapAboveUrl;
   const availableHeight = Math.max(0, bottomLimit - topLimit);
 
-  let chosenFontSize = 16;
-  let lines = [];
-  let lineHeight = 0;
+  // Suche die größte Schriftgröße, die vollständig passt (inkl. Content-Vollständigkeit)
+  let bestConfig = {
+    fontSize: 16,
+    lines: [],
+    lineHeight: 0,
+    totalHeight: Infinity
+  };
 
-  for (let size = 128; size >= 16; size -= 2) {
+  for (let size = 128; size >= 10; size -= 2) {
     ctx.font = `900 ${size}px "Open Sans"`;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-    const lh = size * 1.2;
-    const total = testLines.length * lh;
-    if (testLines.length <= maxLines && total <= availableHeight) {
-      chosenFontSize = size;
-      lines = testLines;
-      lineHeight = lh;
-      break;
-    }
-    if (lines.length === 0) {
-      lines = testLines;
-      lineHeight = lh;
-    }
-  }
+    const lineHeight = size * 1.3;
 
-  // Falls nötig: verkleinern, bis es passt
-  let totalTextHeight = lines.length * lineHeight;
-  if (totalTextHeight > availableHeight && lines.length > 0) {
-    for (let size = chosenFontSize; size >= 12; size -= 2) {
-      ctx.font = `900 ${size}px "Open Sans"`;
+    // Bevorzuge 3 Zeilen, dann 2 (wie dein Referenzcode testet mehrere Varianten)
+    for (let maxLines of [3, 2]) {
       const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-      const lh = size * 1.2;
-      const total = testLines.length * lh;
-      if (testLines.length <= maxLines && total <= availableHeight) {
-        chosenFontSize = size;
-        lines = testLines;
-        lineHeight = lh;
-        totalTextHeight = total;
-        break;
+      const totalTextHeight = testLines.length * lineHeight;
+
+      const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+      const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+
+      if (
+        testLines.length <= maxLines &&
+        totalTextHeight <= availableHeight &&
+        joined === original &&
+        size > bestConfig.fontSize
+      ) {
+        bestConfig = {
+          fontSize: size,
+          lines: testLines,
+          lineHeight,
+          totalHeight: totalTextHeight
+        };
       }
     }
   }
 
-  // Endgültige Y-Position
-  let textY = topLimit;
-  if (textY + totalTextHeight > bottomLimit) {
-    textY = Math.max(topLimit, bottomLimit - totalTextHeight);
+  // Fallback, falls nichts „perfekt“ passt: kleinste sinnvolle Größe nehmen und bestmöglich umbrechen
+  if (!bestConfig.lines.length) {
+    const size = 12;
+    ctx.font = `900 ${size}px "Open Sans"`;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, 3);
+    const lineHeight = size * 1.3;
+    const totalTextHeight = Math.min(testLines.length * lineHeight, availableHeight);
+
+    bestConfig = {
+      fontSize: size,
+      lines: testLines,
+      lineHeight,
+      totalHeight: totalTextHeight
+    };
   }
 
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`;
+  // Endgültige Y-Position (Start am oberen Limit, damit Mindestabstand gewahrt bleibt)
+  let textY = topLimit;
+  if (textY + bestConfig.totalHeight > bottomLimit) {
+    textY = Math.max(topLimit, bottomLimit - bestConfig.totalHeight);
+  }
+
+  // Zeichnen
+  ctx.font = `900 ${bestConfig.fontSize}px "Open Sans"`;
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  lines.forEach((line, index) => {
-    ctx.fillText(line, centerX, textY + index * lineHeight);
+  bestConfig.lines.forEach((line, index) => {
+    ctx.fillText(line, centerX, textY + index * bestConfig.lineHeight);
   });
 
   return canvas;
@@ -204,7 +221,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
           currentLine = '';
         }
         lines.push(part);
-        if (lines.length === maxLines) return lines;
+        if (lines.length === maxLines) return lines; // harte Kappung, aber oben prüfen wir Content-Vollständigkeit
       }
       continue;
     }
@@ -215,7 +232,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
     } else {
       if (currentLine) lines.push(currentLine);
       currentLine = word;
-      if (lines.length === maxLines) return lines;
+      if (lines.length === maxLines) return lines; // harte Kappung
     }
   }
 
