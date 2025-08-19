@@ -1,6 +1,41 @@
 // 01_11_centerCropBlur.js
 const { createCanvas } = require('canvas');
 
+// Skalierungsbasierter Blur, funktioniert ohne ctx.filter.
+// strength: 0.05 (leicht) bis 0.35 (sehr stark)
+// passes: Wiederholungen, jede Wiederholung verstärkt den Effekt
+function applyScaleBlur(srcCanvas, { strength = 0.18, passes = 2 } = {}) {
+  const w = srcCanvas.width;
+  const h = srcCanvas.height;
+
+  // Stärke in Downscale-Verhältnis umsetzen (5%..50% der Originalgröße)
+  const ratio = Math.max(0.05, Math.min(0.5, strength));
+
+  const smallW = Math.max(1, Math.round(w * ratio));
+  const smallH = Math.max(1, Math.round(h * ratio));
+
+  const tmp = createCanvas(smallW, smallH);
+  const tctx = tmp.getContext('2d');
+  const sctx = srcCanvas.getContext('2d');
+
+  // Hohe Interpolationsqualität
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  sctx.imageSmoothingEnabled = true;
+  sctx.imageSmoothingQuality = 'high';
+
+  // Mehrere Down-/Upscale-Pässe für stärkeren Blur
+  for (let i = 0; i < passes; i++) {
+    // Downscale
+    tctx.clearRect(0, 0, smallW, smallH);
+    tctx.drawImage(srcCanvas, 0, 0, smallW, smallH);
+
+    // Upscale zurück auf Originalgröße
+    sctx.clearRect(0, 0, w, h);
+    sctx.drawImage(tmp, 0, 0, smallW, smallH, 0, 0, w, h);
+  }
+}
+
 module.exports = async function centerCropWithDynamicZoomAndBlur(img) {
   const targetWidth = 1000;
   const targetHeight = 1500;
@@ -38,25 +73,30 @@ module.exports = async function centerCropWithDynamicZoomAndBlur(img) {
   const sx = (imgWidth - zoomedCropWidth) / 2;
   const sy = (imgHeight - zoomedCropHeight) / 2;
 
-  // Canvas in Zielgröße
-  const canvas = createCanvas(targetWidth, targetHeight);
-  const ctx = canvas.getContext('2d');
+  // Offscreen-Canvas zum Rendern und Weichzeichnen
+  const work = createCanvas(targetWidth, targetHeight);
+  const wctx = work.getContext('2d');
 
-  // --- Blur einstellen ---
-  // "35%" praxisnah interpretiert als ~3,5% der kürzeren Zielseite -> ~35px bei 1000x1500
-  const blurPx = Math.round(Math.min(targetWidth, targetHeight) * 0.1);
-  // node-canvas unterstützt context.filter (ähnlich CSS)
-  ctx.filter = `blur(${blurPx}px)`;
-
-  // Bild mit Blur rendern
-  ctx.drawImage(
+  // Erst den zugeschnittenen/gesoomten Bereich rendern
+  wctx.imageSmoothingEnabled = true;
+  wctx.imageSmoothingQuality = 'high';
+  wctx.drawImage(
     img,
     sx, sy, zoomedCropWidth, zoomedCropHeight,
     0, 0, targetWidth, targetHeight
   );
 
-  // Filter zurücksetzen (falls später noch gezeichnet würde)
-  ctx.filter = 'none';
+  // --- Starker Blur ohne ctx.filter ---
+  const BLUR_STRENGTH = 0.18; // 0.05..0.35 -> höher = stärker (z.B. 0.20 oder 0.25)
+  const BLUR_PASSES = 2;      // 2–3 Pässe = sehr weich
+  applyScaleBlur(work, { strength: BLUR_STRENGTH, passes: BLUR_PASSES });
+
+  // Ergebnis ins Ziel-Canvas kopieren (falls du später noch darauf zeichnen willst)
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(work, 0, 0);
 
   return canvas;
 };
