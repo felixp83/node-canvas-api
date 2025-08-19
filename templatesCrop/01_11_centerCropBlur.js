@@ -4,12 +4,12 @@ const { createCanvas } = require('canvas');
 // Skalierungsbasierter Blur, funktioniert ohne ctx.filter.
 // strength: 0.05 (leicht) bis 0.35 (sehr stark)
 // passes: Wiederholungen, jede Wiederholung verstärkt den Effekt
-function applyScaleBlur(srcCanvas, { strength = 0.18, passes = 2 } = {}) {
+function applyScaleBlur(srcCanvas, { strength = 0.35, passes = 2 } = {}) {
   const w = srcCanvas.width;
   const h = srcCanvas.height;
 
   // Stärke in Downscale-Verhältnis umsetzen (5%..50% der Originalgröße)
-  const ratio = Math.max(0.05, Math.min(0.5, strength));
+  const ratio = Math.max(0.1, Math.min(0.6, strength));
 
   const smallW = Math.max(1, Math.round(w * ratio));
   const smallH = Math.max(1, Math.round(h * ratio));
@@ -88,7 +88,7 @@ module.exports = async function centerCropWithDynamicZoomAndBlur(img) {
 
   // --- Starker Blur ohne ctx.filter ---
   const BLUR_STRENGTH = 0.35; // 0.05..0.35 -> höher = stärker (z.B. 0.20 oder 0.25)
-  const BLUR_PASSES = 2;      // 2–3 Pässe = sehr weich
+  const BLUR_PASSES = 3;      // 2–3 Pässe = sehr weich
   applyScaleBlur(work, { strength: BLUR_STRENGTH, passes: BLUR_PASSES });
 
   // Ergebnis ins Ziel-Canvas kopieren (falls du später noch darauf zeichnen willst)
