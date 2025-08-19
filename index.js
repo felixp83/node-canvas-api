@@ -16,7 +16,7 @@ const quadrat = require('./templates/04_Quadrat');
 const zeitung = require('./templates/05_Zeitung');
 const fresh = require('./templates/06_Fresh');
 const solid = require('./templates/07_Solid');
-const cropAuto = require('./templatesCrop/06_autoCrop');
+const autoCrop = require('./templatesCrop/06_autoCrop');
 const cropBlur = require('./templatesCrop/01_11_centerCropBlur');
 
 const app = express();
