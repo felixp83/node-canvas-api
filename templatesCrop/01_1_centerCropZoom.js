@@ -1,24 +1,5 @@
 const { createCanvas } = require('canvas');
 
-function applySepia(ctx, width, height) {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    // Sepia Formel
-    data[i]     = Math.min(0.393 * r + 0.769 * g + 0.189 * b, 255); // Rot
-    data[i + 1] = Math.min(0.349 * r + 0.686 * g + 0.168 * b, 255); // Grün
-    data[i + 2] = Math.min(0.272 * r + 0.534 * g + 0.131 * b, 255); // Blau
-    // data[i+3] = alpha bleibt gleich
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-}
-
 module.exports = async function centerCropWithDynamicZoom(img) {
   const targetWidth = 1000;
   const targetHeight = 1500;
@@ -48,7 +29,7 @@ module.exports = async function centerCropWithDynamicZoom(img) {
     }
   }
 
-  // Zoomed crop Bereich (kleiner als cropWidth/cropHeight)
+  // Zoomed crop Bereich
   const zoomedCropWidth = cropWidth / zoomFactor;
   const zoomedCropHeight = cropHeight / zoomFactor;
 
@@ -59,14 +40,12 @@ module.exports = async function centerCropWithDynamicZoom(img) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
+  // Bild ohne Filter rendern
   ctx.drawImage(
     img,
     sx, sy, zoomedCropWidth, zoomedCropHeight,
     0, 0, targetWidth, targetHeight
   );
-
-  // Sepia-Filter anwenden
-  applySepia(ctx, targetWidth, targetHeight);
 
   return canvas;
 };
