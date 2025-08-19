@@ -87,7 +87,7 @@ module.exports = async function centerCropWithDynamicZoomAndBlur(img) {
   );
 
   // --- Starker Blur ohne ctx.filter ---
-  const BLUR_STRENGTH = 0.18; // 0.05..0.35 -> höher = stärker (z.B. 0.20 oder 0.25)
+  const BLUR_STRENGTH = 0.35; // 0.05..0.35 -> höher = stärker (z.B. 0.20 oder 0.25)
   const BLUR_PASSES = 2;      // 2–3 Pässe = sehr weich
   applyScaleBlur(work, { strength: BLUR_STRENGTH, passes: BLUR_PASSES });
 
