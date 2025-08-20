@@ -76,7 +76,7 @@ module.exports = async function generateFreshTemplate(
   });
 
   // === CTA-Kapsel oben (im weißen Bereich) ===
-  const ctaText = 'JETZT MERKEN';
+  const ctaText = 'ZUM ARTIKEL';
   const ctaFontSize = 48;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 100;
