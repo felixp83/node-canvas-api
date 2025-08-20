@@ -33,7 +33,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === Button-Parameter ===
   const buttonBaseHeight = 120;
   const buttonHeight = buttonBaseHeight * 0.9 * 0.85 * 0.9;
-  const buttonText = "JETZT BESUCHEN";
+  const buttonText = "JETZT WEITERLESEN";
   const buttonFontSize = 28;
 
   ctx.font = `normal ${buttonFontSize}px "Open Sans"`;
