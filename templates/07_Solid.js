@@ -53,7 +53,7 @@ module.exports = async function generateSolidTemplate(
   ctx.stroke();
 
   // === CTA-Button (weiß mit roter Schrift) ===
-  const ctaText = 'JETZT BESUCHEN';
+  const ctaText = 'WEITERLESEN';
   const ctaFontSize = 49.4; // 38 * 1.3
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 80;
