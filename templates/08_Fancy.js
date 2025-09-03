@@ -2,11 +2,11 @@
 const { createCanvas } = require('canvas');
 
 module.exports = async function generateFancyTextTemplate(
-  img,            // ungenutzt
+  img,          // HINTERGRUND aus Step 1 (Canvas/Image)
   overlayText,
-  targetWidth,    // ungenutzt
-  targetHeight,   // ungenutzt
-  website         // ungenutzt
+  _targetWidth,   // ungenutzt
+  _targetHeight,  // ungenutzt
+  _website        // ungenutzt
 ) {
   // Exakt 1000x1500 px
   const WIDTH = 1000;
@@ -15,71 +15,68 @@ module.exports = async function generateFancyTextTemplate(
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Transparenter Hintergrund – nur Text (keine weiteren Designelemente)
+  // === 1) Vorherigen Hintergrund übernehmen (cover-fit & zentriert) ===
+  if (img && img.width && img.height) {
+    const { sx, sy, sSize } = squareCoverCrop(img.width, img.height);
+    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, WIDTH, HEIGHT);
+  }
+  // Wichtig: KEIN Flächen-Fill -> vorhandener Hintergrund bleibt erhalten
 
-  // Textbox nimmt 70% der Höhe ein
-  const TEXTBOX_HEIGHT = Math.round(HEIGHT * 0.7); // 1050px
-  const TEXTBOX_WIDTH = Math.round(WIDTH * 0.86);  // großzügige Breite
-  const TEXTBOX_X = Math.round((WIDTH - TEXTBOX_WIDTH) / 2);
-  const TEXTBOX_Y = Math.round((HEIGHT - TEXTBOX_HEIGHT) / 2);
+  // === 2) Textlayout – Box nutzt 70% der Höhe, ~86% der Breite ===
+  const BOX_H = Math.round(HEIGHT * 0.70);  // 1050
+  const BOX_W = Math.round(WIDTH * 0.86);   // 860
+  const BOX_X = Math.round((WIDTH - BOX_W) / 2);
+  const BOX_Y = Math.round((HEIGHT - BOX_H) / 2);
 
-  // Optional: dezenter Shadow für bessere Lesbarkeit (bleibt reiner Texteffekt)
+  // dezenter Shadow nur für Text
   ctx.shadowColor = 'rgba(0,0,0,0.25)';
   ctx.shadowBlur = 12;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 4;
 
-  // Bestmögliche Schriftgröße finden, die:
-  // - vollständig in die Textbox passt
-  // - stabil umbricht (keine abgeschnittenen Wörter)
-  // - max. 6 Zeilen nutzt (gute Lesbarkeit)
+  // Auto-Fit: größte Schriftgröße finden, die komplett in die Box passt
   const maxLinesCap = 6;
   let best = { size: 0, lines: [], lineHeight: 0, totalHeight: 0 };
 
   for (let size = 200; size >= 12; size -= 2) {
     ctx.font = `italic 900 ${size}px "Open Sans"`; // stylisch: fett + italic
     const lineHeight = Math.round(size * 1.18);
-    const maxLines = Math.max(1, Math.min(Math.floor(TEXTBOX_HEIGHT / lineHeight), maxLinesCap));
+    const maxLines = Math.max(1, Math.min(Math.floor(BOX_H / lineHeight), maxLinesCap));
 
-    const lines = wrapText(ctx, overlayText, TEXTBOX_WIDTH, maxLines);
+    const lines = wrapText(ctx, overlayText, BOX_W, maxLines);
     const joined = lines.join('').replace(/[\s-]/g, '');
-    const original = overlayText.replace(/[\s-]/g, '');
+    const original = String(overlayText || '').replace(/[\s-]/g, '');
     const totalH = lines.length * lineHeight;
 
-    const fits =
-      lines.length <= maxLines &&
-      totalH <= TEXTBOX_HEIGHT &&
-      joined === original;
-
-    if (fits) {
+    if (lines.length <= maxLines && totalH <= BOX_H && joined === original) {
       best = { size, lines, lineHeight, totalHeight: totalH };
       break; // größtmögliche passende Größe gefunden
     }
   }
 
-  // Fallback, falls der obige Loop nichts findet (extrem lange Strings)
+  // Fallback
   if (!best.size) {
     const size = 12;
     ctx.font = `italic 900 ${size}px "Open Sans"`;
     const lineHeight = Math.round(size * 1.18);
-    const lines = wrapText(ctx, overlayText, TEXTBOX_WIDTH, Math.min(maxLinesCap, Math.floor(TEXTBOX_HEIGHT / lineHeight)));
-    best = { size, lines, lineHeight, totalHeight: Math.min(lines.length * lineHeight, TEXTBOX_HEIGHT) };
+    const lines = wrapText(ctx, overlayText, BOX_W, Math.min(maxLinesCap, Math.floor(BOX_H / lineHeight)));
+    best = { size, lines, lineHeight, totalHeight: Math.min(lines.length * lineHeight, BOX_H) };
   }
 
-  // Zeichnen: zentriert in der Textbox
+  // === 3) Text zeichnen (zentriert in der Box) ===
   ctx.font = `italic 900 ${best.size}px "Open Sans"`;
-  ctx.fillStyle = '#FFFFFF'; // neutraler Overlay-Text (gut auf farbigen Flächen)
+  ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
-  const startY = TEXTBOX_Y + Math.round((TEXTBOX_HEIGHT - best.totalHeight) / 2);
+  const startY = BOX_Y + Math.round((BOX_H - best.totalHeight) / 2);
   const centerX = Math.round(WIDTH / 2);
 
   best.lines.forEach((line, i) => {
     ctx.fillText(line, centerX, startY + i * best.lineHeight);
   });
 
-  // Shadow wieder deaktivieren (nur der Text sollte ihn haben)
+  // Shadow nur für Text -> danach deaktivieren
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
@@ -88,7 +85,22 @@ module.exports = async function generateFancyTextTemplate(
   return canvas;
 };
 
-// --- Hilfsfunktionen ---
+// === Helper: quadratischer Cover-Crop (zentriert) ===
+function squareCoverCrop(w, h) {
+  let sSize, sx, sy;
+  if (w > h) {
+    sSize = h;
+    sx = (w - sSize) / 2;
+    sy = 0;
+  } else {
+    sSize = w;
+    sx = 0;
+    sy = (h - sSize) / 2;
+  }
+  return { sx, sy, sSize };
+}
+
+// --- Text-Wrapping-Helpers ---
 function breakLongWord(ctx, word, maxWidth) {
   const parts = [];
   let buf = '';
@@ -99,7 +111,6 @@ function breakLongWord(ctx, word, maxWidth) {
         parts.push(buf + '-'); // Silbentrennung andeuten
         buf = ch;
       } else {
-        // Edgecase: einzelnes Zeichen > maxWidth
         parts.push(ch);
         buf = '';
       }
@@ -117,7 +128,6 @@ function wrapText(ctx, text, maxWidth, maxLines) {
   let current = '';
 
   for (const word of words) {
-    // Wenn ein einzelnes Wort zu breit ist, zerlegen
     if (ctx.measureText(word).width > maxWidth) {
       const segments = breakLongWord(ctx, word, maxWidth);
       for (const seg of segments) {
@@ -126,14 +136,8 @@ function wrapText(ctx, text, maxWidth, maxLines) {
           current = '';
           if (lines.length === maxLines) return lines;
         }
-        if (ctx.measureText(seg).width <= maxWidth) {
-          lines.push(seg);
-          if (lines.length === maxLines) return lines;
-        } else {
-          // Extremfall, trotzdem pushen
-          lines.push(seg);
-          if (lines.length === maxLines) return lines;
-        }
+        lines.push(seg);
+        if (lines.length === maxLines) return lines;
       }
       continue;
     }
