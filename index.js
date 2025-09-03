@@ -18,6 +18,7 @@ const fresh = require('./templates/06_Fresh');
 const solid = require('./templates/07_Solid');
 const autoCrop = require('./templatesCrop/06_autoCrop');
 const cropBlur = require('./templatesCrop/01_11_centerCropBlur');
+const red = require('./templatesColor/01_Red');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -547,6 +548,43 @@ app.post('/cropBlur', async (req, res) => {
     const canvas = await cropBlur(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-cropBlur-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  } 
+});
+
+// Neue Route: Red Template
+app.post('/red', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await red(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-red-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
