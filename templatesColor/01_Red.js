@@ -8,11 +8,11 @@ module.exports = async function generateRedTemplate() {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // === Grundfläche in sanftem Rot ===
+  // Hintergrund
   ctx.fillStyle = '#E87474';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // === Leicht geschwungenes Muster in hellerem Rot ===
+  // Muster
   ctx.save();
   ctx.globalAlpha = 0.22;
   ctx.fillStyle = '#F29A9A';
@@ -28,14 +28,12 @@ module.exports = async function generateRedTemplate() {
     const phase = i * 0.6;
 
     ctx.beginPath();
-    // obere Kante
     ctx.moveTo(0, y);
     ctx.bezierCurveTo(
       WIDTH * 0.25, y - amp * Math.cos(phase),
       WIDTH * 0.75, y + amp * Math.sin(phase),
       WIDTH, y
     );
-    // untere Kante
     const y2 = y + bh;
     ctx.lineTo(WIDTH, y2);
     ctx.bezierCurveTo(
@@ -49,6 +47,6 @@ module.exports = async function generateRedTemplate() {
 
   ctx.restore();
 
-  // Gibt ein fertiges Canvas zurück (wie centerCrop)
-  return canvas;
+  // === wichtig: als Buffer zurückgeben ===
+  return canvas.toBuffer('image/png');
 };
