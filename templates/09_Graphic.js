@@ -2,24 +2,30 @@ const { createCanvas } = require('canvas');
 
 /**
  * Zeichnet Text auf ein vorhandenes Hintergrundbild (Canvas/Image)
- * @param {Canvas|Image} img - Hintergrundbild
+ * @param {Canvas|Image} img - Hintergrundbild (wird unverändert übernommen)
  * @param {String} overlayText - Text, der auf das Bild geschrieben wird
  * @param {Number} targetWidth - Canvas-Breite (optional, default 1000)
  * @param {Number} targetHeight - Canvas-Höhe (optional, default 1500)
  * @param {String} website - Website-Text unten (optional)
  * @returns {Canvas} Canvas-Objekt
  */
-module.exports = async function generateGraphicText(img, overlayText, targetWidth = 1000, targetHeight = 1500, website = '') {
+module.exports = async function generateGraphicText(
+  img,
+  overlayText,
+  targetWidth = 1000,
+  targetHeight = 1500,
+  website = ''
+) {
   const WIDTH = targetWidth;
   const HEIGHT = targetHeight;
 
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // === 1) Hintergrund übernehmen (cover-fit & zentriert) ===
+  // === 1) Hintergrund übernehmen unverändert ===
   if (img && img.width && img.height) {
-    const { sx, sy, sSize } = squareCoverCrop(img.width, img.height);
-    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, WIDTH, HEIGHT);
+    // Einfach 1:1 auf Canvas zeichnen, keine Anpassung oder Crop
+    ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
   }
 
   // === 2) Textlayout – Box nutzt 70% der Höhe, ~86% der Breite ===
@@ -102,21 +108,6 @@ module.exports = async function generateGraphicText(img, overlayText, targetWidt
 
   return canvas;
 };
-
-// === Helper: quadratischer Cover-Crop (zentriert) ===
-function squareCoverCrop(w, h) {
-  let sSize, sx, sy;
-  if (w > h) {
-    sSize = h;
-    sx = (w - sSize) / 2;
-    sy = 0;
-  } else {
-    sSize = w;
-    sx = 0;
-    sy = (h - sSize) / 2;
-  }
-  return { sx, sy, sSize };
-}
 
 // --- Text-Wrapping-Helpers ---
 function breakLongWord(ctx, word, maxWidth) {
