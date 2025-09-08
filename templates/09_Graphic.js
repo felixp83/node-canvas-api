@@ -1,5 +1,8 @@
 // 03_Graphic.js
-const { createCanvas } = require('canvas');
+const { createCanvas, registerFont } = require('canvas');
+
+// 👉 Wenn du Open Sans als lokale Datei hast, kannst du es hier einbinden:
+// registerFont('/pfad/zu/OpenSans-Regular.ttf', { family: 'Open Sans' });
 
 module.exports = async function generateGraphicText(
   rows,
@@ -8,42 +11,67 @@ module.exports = async function generateGraphicText(
   const WIDTH = 1000;
   const HEIGHT = 1500;
 
+  // Eingabedaten prüfen
+  console.log('=== generateGraphicText gestartet ===');
+  console.log('rows Input:', JSON.stringify(rows, null, 2));
+  console.log('Hat targetCanvas?', !!targetCanvas);
+
   // Entweder neues Canvas oder ein bestehendes verwenden
   const canvas = targetCanvas || createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Box für Text (70% Höhe)
-  const BOX_W = Math.round(WIDTH * 0.86);
-  const BOX_H = Math.round(HEIGHT * 0.70);
-  const BOX_Y = Math.round((HEIGHT - BOX_H) / 2);
+  try {
+    // Box für Text (70% Höhe)
+    const BOX_W = Math.round(WIDTH * 0.86);
+    const BOX_H = Math.round(HEIGHT * 0.70);
+    const BOX_Y = Math.round((HEIGHT - BOX_H) / 2);
 
-  const metrics = measureLayout(ctx, rows);
-  const scaleX = BOX_W / metrics.width;
-  const scaleY = BOX_H / metrics.height;
-  const scale = Math.min(scaleX, scaleY) * 0.98;
+    const metrics = measureLayout(ctx, rows);
+    console.log('Layout-Metrics:', metrics);
 
-  ctx.save();
-  ctx.translate(WIDTH / 2, BOX_Y + BOX_H / 2);
-  ctx.scale(scale, scale);
-  ctx.translate(-metrics.width / 2, -metrics.height / 2);
-  drawRows(ctx, rows, metrics.lineHeights, metrics.width);
-  ctx.restore();
+    const scaleX = BOX_W / metrics.width;
+    const scaleY = BOX_H / metrics.height;
+    const scale = Math.min(scaleX, scaleY) * 0.98;
 
-  // Ergebnis nur dann zurückgeben, wenn wir selbst ein Canvas erstellt haben
-  if (!targetCanvas) {
-    const buffer = canvas.toBuffer('image/png');
-    return {
-      data: buffer.toString('base64'),
-      mimeType: 'image/png',
-    };
+    ctx.save();
+    ctx.translate(WIDTH / 2, BOX_Y + BOX_H / 2);
+    ctx.scale(scale, scale);
+    ctx.translate(-metrics.width / 2, -metrics.height / 2);
+    drawRows(ctx, rows, metrics.lineHeights, metrics.width);
+    ctx.restore();
+
+    // Ergebnis nur dann zurückgeben, wenn wir selbst ein Canvas erstellt haben
+    if (!targetCanvas) {
+      try {
+        const buffer = canvas.toBuffer('image/png');
+        return {
+          data: buffer.toString('base64'),
+          mimeType: 'image/png',
+        };
+      } catch (err) {
+        console.error('Fehler bei canvas.toBuffer():', err);
+        throw new Error('Bildgenerierung fehlgeschlagen: ' + err.message);
+      }
+    }
+  } catch (err) {
+    console.error('Fehler in generateGraphicText:', err);
+    throw err;
   }
 };
 
 // ---- Helpers ----
 function measureLayout(ctx, rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error('Ungültige rows übergeben: ' + JSON.stringify(rows));
+  }
+
   let maxWidth = 0;
   const lineHeights = [];
   rows.forEach((spans, lineIdx) => {
+    if (!Array.isArray(spans) || spans.length === 0) {
+      throw new Error(`Ungültige Zeile an Index ${lineIdx}: ${JSON.stringify(spans)}`);
+    }
+
     const maxSize = Math.max(...spans.map(s => s.size || 40));
     const lh = Math.round(maxSize * 1.18);
     lineHeights[lineIdx] = lh;
@@ -76,7 +104,7 @@ function drawRows(ctx, rows, lineHeights, layoutWidth) {
         baseline = 0,
       } = span;
 
-      // Wichtiger Fix: Fallback-Font nutzen
+      // Fallback-Font nutzen, falls Open Sans nicht installiert
       ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "Open Sans", sans-serif`;
       ctx.fillStyle = color;
       ctx.textBaseline = 'alphabetic';
