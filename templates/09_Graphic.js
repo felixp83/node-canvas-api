@@ -24,7 +24,6 @@ module.exports = async function generateGraphicText(
 
   // === 1) Hintergrund übernehmen unverändert ===
   if (img && img.width && img.height) {
-    // Einfach 1:1 auf Canvas zeichnen, keine Anpassung oder Crop
     ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
   }
 
@@ -33,12 +32,6 @@ module.exports = async function generateGraphicText(
   const BOX_W = Math.round(WIDTH * 0.86);
   const BOX_X = Math.round((WIDTH - BOX_W) / 2);
   const BOX_Y = Math.round((HEIGHT - BOX_H) / 2);
-
-  // dezenter Shadow nur für Text
-  ctx.shadowColor = 'rgba(0,0,0,0.25)';
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 4;
 
   // Auto-Fit: größte Schriftgröße finden, die komplett in die Box passt
   const maxLinesCap = 6;
@@ -71,24 +64,39 @@ module.exports = async function generateGraphicText(
 
   // === 3) Text zeichnen (zentriert in der Box) ===
   ctx.font = `italic 900 ${best.size}px "Open Sans"`;
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-
   const startY = BOX_Y + Math.round((BOX_H - best.totalHeight) / 2);
   const centerX = Math.round(WIDTH / 2);
 
+  // Shadow + Outline + Gradient
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  const gradient = ctx.createLinearGradient(0, startY, 0, startY + best.totalHeight);
+  gradient.addColorStop(0, '#555555'); // dunkelgrau
+  gradient.addColorStop(1, '#555555'); // dunkelgrau
+  ctx.fillStyle = gradient;
+
+  ctx.strokeStyle = '#333333'; // dunklerer Outline
+  ctx.lineWidth = 3;
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
   best.lines.forEach((line, i) => {
-    ctx.fillText(line, centerX, startY + i * best.lineHeight);
+    const y = startY + i * best.lineHeight;
+    ctx.strokeText(line, centerX, y);
+    ctx.fillText(line, centerX, y);
   });
 
-  // Shadow nur für Text -> danach deaktivieren
+  // Shadow für Text deaktivieren
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
 
-  // === 4) Website unten einfügen (wie Solid-Template) ===
+  // === 4) Website unten einfügen (dunkelgrau) ===
   const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
   const urlFontSize = 42; // Fix
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
@@ -97,11 +105,11 @@ module.exports = async function generateGraphicText(
   const urlX = (WIDTH - urlWidth) / 2;
   const urlY = HEIGHT - urlHeight - 60; // Fix Abstand
 
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
   ctx.fill();
 
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#555555'; // dunkelgrau
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(urlText, WIDTH / 2, urlY + urlHeight / 2);
