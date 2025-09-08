@@ -3,12 +3,13 @@ const { createCanvas } = require('canvas');
 
 module.exports = async function generateGraphicText(
   rows,
-  _targetWidth,
-  _targetHeight
+  targetCanvas = null
 ) {
   const WIDTH = 1000;
   const HEIGHT = 1500;
-  const canvas = createCanvas(WIDTH, HEIGHT);
+
+  // Entweder neues Canvas oder ein bestehendes verwenden
+  const canvas = targetCanvas || createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
   // Box für Text (70% Höhe)
@@ -28,12 +29,14 @@ module.exports = async function generateGraphicText(
   drawRows(ctx, rows, metrics.lineHeights, metrics.width);
   ctx.restore();
 
-  // 🎯 Hier der Unterschied: Ergebnis in Base64 + MimeType
-  const buffer = canvas.toBuffer('image/png');
-  return {
-    data: buffer.toString('base64'),
-    mimeType: 'image/png',
-  };
+  // Ergebnis nur dann zurückgeben, wenn wir selbst ein Canvas erstellt haben
+  if (!targetCanvas) {
+    const buffer = canvas.toBuffer('image/png');
+    return {
+      data: buffer.toString('base64'),
+      mimeType: 'image/png',
+    };
+  }
 };
 
 // ---- Helpers ----
@@ -73,7 +76,8 @@ function drawRows(ctx, rows, lineHeights, layoutWidth) {
         baseline = 0,
       } = span;
 
-      ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "Open Sans"`;
+      // Wichtiger Fix: Fallback-Font nutzen
+      ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "Open Sans", sans-serif`;
       ctx.fillStyle = color;
       ctx.textBaseline = 'alphabetic';
 
@@ -106,7 +110,7 @@ function measureLineWidth(ctx, spans) {
     const size = span.size || 40;
     const weight = span.weight || 700;
     const italic = span.italic ? 'italic ' : '';
-    ctx.font = `${italic}${weight} ${size}px "Open Sans"`;
+    ctx.font = `${italic}${weight} ${size}px "Open Sans", sans-serif`;
     w += measureText(ctx, span.text || '', span.letterSpacing || 0);
   });
   return w;
