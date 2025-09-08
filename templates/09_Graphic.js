@@ -1,4 +1,3 @@
-// 03_Graphic.js
 const { createCanvas } = require('canvas');
 
 /**
@@ -7,9 +6,10 @@ const { createCanvas } = require('canvas');
  * @param {String} overlayText - Text, der auf das Bild geschrieben wird
  * @param {Number} targetWidth - Canvas-Breite (optional, default 1000)
  * @param {Number} targetHeight - Canvas-Höhe (optional, default 1500)
+ * @param {String} website - Website-Text unten (optional)
  * @returns {Canvas} Canvas-Objekt
  */
-module.exports = async function generateGraphicText(img, overlayText, targetWidth = 1000, targetHeight = 1500) {
+module.exports = async function generateGraphicText(img, overlayText, targetWidth = 1000, targetHeight = 1500, website = '') {
   const WIDTH = targetWidth;
   const HEIGHT = targetHeight;
 
@@ -81,6 +81,24 @@ module.exports = async function generateGraphicText(img, overlayText, targetWidt
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
+
+  // === 4) Website unten einfügen (wie Solid-Template) ===
+  const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
+  const urlFontSize = 42; // Fix
+  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  const urlWidth = ctx.measureText(urlText).width + 160;
+  const urlHeight = urlFontSize * 1.6;
+  const urlX = (WIDTH - urlWidth) / 2;
+  const urlY = HEIGHT - urlHeight - 60; // Fix Abstand
+
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(urlText, WIDTH / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
@@ -154,4 +172,19 @@ function wrapText(ctx, text, maxWidth, maxLines) {
 
   if (current && lines.length < maxLines) lines.push(current);
   return lines;
+}
+
+// === Helper: Runde Rechtecke für Hintergrund der URL ===
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
