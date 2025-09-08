@@ -2,29 +2,26 @@
 const { createCanvas, loadImage } = require('canvas');
 
 /**
- * Zeichnet Text auf ein Canvas mit optionalem Hintergrundbild
- * @param {Array} rows - Textzeilen mit Styling [{text, size, weight, italic, color, letterSpacing, baseline, curveAmp}]
- * @param {Canvas} targetCanvas - Optional vorhandenes Canvas
- * @param {Image} bgImage - Optionales Hintergrundbild (Image-Objekt von loadImage)
- * @param {Number} targetWidth - Canvas-Breite
- * @param {Number} targetHeight - Canvas-Höhe
+ * Zeichnet Text auf ein Canvas mit Hintergrundbild von URL
+ * @param {Array} rows - Textzeilen [{text, size, weight, italic, color, letterSpacing, baseline}]
+ * @param {String} bgUrl - URL des Hintergrundbilds
+ * @param {Number} targetWidth - gewünschte Breite des Canvas
+ * @param {Number} targetHeight - gewünschte Höhe des Canvas
  * @returns {Canvas} Canvas-Objekt
  */
-module.exports = async function generateGraphicText(
-  rows,
-  targetCanvas = null,
-  bgImage = null,
-  targetWidth = 1000,
-  targetHeight = 1500
-) {
-  // Canvas erzeugen oder vorhandenes verwenden
-  const canvas = targetCanvas || createCanvas(targetWidth, targetHeight);
+module.exports = async function generateGraphicText(rows, bgUrl, targetWidth = 1000, targetHeight = 1500) {
+  // Canvas erstellen
+  const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // Hintergrund zeichnen
-  if (bgImage) {
+  // Hintergrundbild laden
+  let bgImage = null;
+  try {
+    bgImage = await loadImage(bgUrl);
     ctx.drawImage(bgImage, 0, 0, targetWidth, targetHeight);
-  } else {
+  } catch (err) {
+    console.error('Hintergrundbild konnte nicht geladen werden:', err);
+    // Fallback: weißer Hintergrund
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, targetWidth, targetHeight);
   }
@@ -52,21 +49,15 @@ module.exports = async function generateGraphicText(
 
 // ---- Helpers ----
 function measureLayout(ctx, rows) {
-  if (!Array.isArray(rows) || rows.length === 0) {
-    throw new Error('Ungültige rows übergeben: ' + JSON.stringify(rows));
-  }
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error('Ungültige rows');
 
   let maxWidth = 0;
   const lineHeights = [];
 
-  rows.forEach((spans, lineIdx) => {
-    if (!Array.isArray(spans) || spans.length === 0) {
-      throw new Error(`Ungültige Zeile an Index ${lineIdx}: ${JSON.stringify(spans)}`);
-    }
-
+  rows.forEach((spans, i) => {
     const maxSize = Math.max(...spans.map(s => s.size || 40));
     const lh = Math.round(maxSize * 1.18);
-    lineHeights[lineIdx] = lh;
+    lineHeights[i] = lh;
 
     const width = measureLineWidth(ctx, spans);
     if (width > maxWidth) maxWidth = width;
@@ -83,7 +74,7 @@ function drawRows(ctx, rows, lineHeights, layoutWidth) {
     let x = (layoutWidth - lineWidth) / 2;
 
     spans.forEach(span => {
-      const { text = '', size = 40, weight = 700, italic = false, color = '#000', letterSpacing = 0, baseline = 0 } = span;
+      const { text = '', size = 40, weight = 700, italic = false, color = '#fff', letterSpacing = 0, baseline = 0 } = span;
       ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "Open Sans", sans-serif`;
       ctx.fillStyle = color;
       ctx.textBaseline = 'alphabetic';
@@ -113,8 +104,6 @@ function measureLineWidth(ctx, spans) {
 
 function measureText(ctx, text, letterSpacing) {
   let sum = 0;
-  for (const ch of text || '') {
-    sum += ctx.measureText(ch).width + (letterSpacing || 0);
-  }
+  for (const ch of text || '') sum += ctx.measureText(ch).width + (letterSpacing || 0);
   return sum;
 }
