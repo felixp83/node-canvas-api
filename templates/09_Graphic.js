@@ -1,109 +1,157 @@
 // 03_Graphic.js
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas } = require('canvas');
 
 /**
- * Zeichnet Text auf ein Canvas mit Hintergrundbild von URL
- * @param {Array} rows - Textzeilen [{text, size, weight, italic, color, letterSpacing, baseline}]
- * @param {String} bgUrl - URL des Hintergrundbilds
- * @param {Number} targetWidth - gewünschte Breite des Canvas
- * @param {Number} targetHeight - gewünschte Höhe des Canvas
+ * Zeichnet Text auf ein vorhandenes Hintergrundbild (Canvas/Image)
+ * @param {Canvas|Image} img - Hintergrundbild
+ * @param {String} overlayText - Text, der auf das Bild geschrieben wird
+ * @param {Number} targetWidth - Canvas-Breite (optional, default 1000)
+ * @param {Number} targetHeight - Canvas-Höhe (optional, default 1500)
  * @returns {Canvas} Canvas-Objekt
  */
-module.exports = async function generateGraphicText(rows, bgUrl, targetWidth = 1000, targetHeight = 1500) {
-  // Canvas erstellen
-  const canvas = createCanvas(targetWidth, targetHeight);
+module.exports = async function generateGraphicText(img, overlayText, targetWidth = 1000, targetHeight = 1500) {
+  const WIDTH = targetWidth;
+  const HEIGHT = targetHeight;
+
+  const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Hintergrundbild laden
-  let bgImage = null;
-  try {
-    bgImage = await loadImage(bgUrl);
-    ctx.drawImage(bgImage, 0, 0, targetWidth, targetHeight);
-  } catch (err) {
-    console.error('Hintergrundbild konnte nicht geladen werden:', err);
-    // Fallback: weißer Hintergrund
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, targetWidth, targetHeight);
+  // === 1) Hintergrund übernehmen (cover-fit & zentriert) ===
+  if (img && img.width && img.height) {
+    const { sx, sy, sSize } = squareCoverCrop(img.width, img.height);
+    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, WIDTH, HEIGHT);
   }
 
-  // Textbereich
-  const BOX_W = Math.round(targetWidth * 0.86);
-  const BOX_H = Math.round(targetHeight * 0.7);
-  const BOX_Y = Math.round((targetHeight - BOX_H) / 2);
+  // === 2) Textlayout – Box nutzt 70% der Höhe, ~86% der Breite ===
+  const BOX_H = Math.round(HEIGHT * 0.70);
+  const BOX_W = Math.round(WIDTH * 0.86);
+  const BOX_X = Math.round((WIDTH - BOX_W) / 2);
+  const BOX_Y = Math.round((HEIGHT - BOX_H) / 2);
 
-  const metrics = measureLayout(ctx, rows);
+  // dezenter Shadow nur für Text
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4;
 
-  const scaleX = BOX_W / metrics.width;
-  const scaleY = BOX_H / metrics.height;
-  const scale = Math.min(scaleX, scaleY) * 0.98;
+  // Auto-Fit: größte Schriftgröße finden, die komplett in die Box passt
+  const maxLinesCap = 6;
+  let best = { size: 0, lines: [], lineHeight: 0, totalHeight: 0 };
 
-  ctx.save();
-  ctx.translate(targetWidth / 2, BOX_Y + BOX_H / 2);
-  ctx.scale(scale, scale);
-  ctx.translate(-metrics.width / 2, -metrics.height / 2);
-  drawRows(ctx, rows, metrics.lineHeights, metrics.width);
-  ctx.restore();
+  for (let size = 200; size >= 12; size -= 2) {
+    ctx.font = `italic 900 ${size}px "Open Sans"`;
+    const lineHeight = Math.round(size * 1.18);
+    const maxLines = Math.max(1, Math.min(Math.floor(BOX_H / lineHeight), maxLinesCap));
+
+    const lines = wrapText(ctx, overlayText, BOX_W, maxLines);
+    const joined = lines.join('').replace(/[\s-]/g, '');
+    const original = String(overlayText || '').replace(/[\s-]/g, '');
+    const totalH = lines.length * lineHeight;
+
+    if (lines.length <= maxLines && totalH <= BOX_H && joined === original) {
+      best = { size, lines, lineHeight, totalHeight: totalH };
+      break;
+    }
+  }
+
+  // Fallback
+  if (!best.size) {
+    const size = 12;
+    ctx.font = `italic 900 ${size}px "Open Sans"`;
+    const lineHeight = Math.round(size * 1.18);
+    const lines = wrapText(ctx, overlayText, BOX_W, Math.min(maxLinesCap, Math.floor(BOX_H / lineHeight)));
+    best = { size, lines, lineHeight, totalHeight: Math.min(lines.length * lineHeight, BOX_H) };
+  }
+
+  // === 3) Text zeichnen (zentriert in der Box) ===
+  ctx.font = `italic 900 ${best.size}px "Open Sans"`;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  const startY = BOX_Y + Math.round((BOX_H - best.totalHeight) / 2);
+  const centerX = Math.round(WIDTH / 2);
+
+  best.lines.forEach((line, i) => {
+    ctx.fillText(line, centerX, startY + i * best.lineHeight);
+  });
+
+  // Shadow nur für Text -> danach deaktivieren
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 
   return canvas;
 };
 
-// ---- Helpers ----
-function measureLayout(ctx, rows) {
-  if (!Array.isArray(rows) || rows.length === 0) throw new Error('Ungültige rows');
-
-  let maxWidth = 0;
-  const lineHeights = [];
-
-  rows.forEach((spans, i) => {
-    const maxSize = Math.max(...spans.map(s => s.size || 40));
-    const lh = Math.round(maxSize * 1.18);
-    lineHeights[i] = lh;
-
-    const width = measureLineWidth(ctx, spans);
-    if (width > maxWidth) maxWidth = width;
-  });
-
-  return { width: maxWidth, height: lineHeights.reduce((a,b)=>a+b,0), lineHeights };
+// === Helper: quadratischer Cover-Crop (zentriert) ===
+function squareCoverCrop(w, h) {
+  let sSize, sx, sy;
+  if (w > h) {
+    sSize = h;
+    sx = (w - sSize) / 2;
+    sy = 0;
+  } else {
+    sSize = w;
+    sx = 0;
+    sy = (h - sSize) / 2;
+  }
+  return { sx, sy, sSize };
 }
 
-function drawRows(ctx, rows, lineHeights, layoutWidth) {
-  let y = 0;
-  rows.forEach((spans, i) => {
-    const lh = lineHeights[i];
-    const lineWidth = measureLineWidth(ctx, spans);
-    let x = (layoutWidth - lineWidth) / 2;
-
-    spans.forEach(span => {
-      const { text = '', size = 40, weight = 700, italic = false, color = '#fff', letterSpacing = 0, baseline = 0 } = span;
-      ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "Open Sans", sans-serif`;
-      ctx.fillStyle = color;
-      ctx.textBaseline = 'alphabetic';
-
-      for (const ch of text) {
-        const chW = ctx.measureText(ch).width;
-        ctx.fillText(ch, x, y + lh * 0.8 + baseline);
-        x += chW + letterSpacing;
+// --- Text-Wrapping-Helpers ---
+function breakLongWord(ctx, word, maxWidth) {
+  const parts = [];
+  let buf = '';
+  for (const ch of word) {
+    const next = buf + ch;
+    if (ctx.measureText(next).width > maxWidth) {
+      if (buf.length > 0) {
+        parts.push(buf + '-');
+        buf = ch;
+      } else {
+        parts.push(ch);
+        buf = '';
       }
-    });
-
-    y += lh;
-  });
+    } else {
+      buf = next;
+    }
+  }
+  if (buf) parts.push(buf);
+  return parts;
 }
 
-function measureLineWidth(ctx, spans) {
-  let w = 0;
-  spans.forEach(span => {
-    const size = span.size || 40;
-    const weight = span.weight || 700;
-    const italic = span.italic ? 'italic ' : '';
-    ctx.font = `${italic}${weight} ${size}px "Open Sans", sans-serif`;
-    w += measureText(ctx, span.text || '', span.letterSpacing || 0);
-  });
-  return w;
-}
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = String(text || '').trim().split(/\s+/);
+  const lines = [];
+  let current = '';
 
-function measureText(ctx, text, letterSpacing) {
-  let sum = 0;
-  for (const ch of text || '') sum += ctx.measureText(ch).width + (letterSpacing || 0);
-  return sum;
+  for (const word of words) {
+    if (ctx.measureText(word).width > maxWidth) {
+      const segments = breakLongWord(ctx, word, maxWidth);
+      for (const seg of segments) {
+        if (current.length > 0) {
+          lines.push(current);
+          current = '';
+          if (lines.length === maxLines) return lines;
+        }
+        lines.push(seg);
+        if (lines.length === maxLines) return lines;
+      }
+      continue;
+    }
+
+    const test = current ? current + ' ' + word : word;
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+      if (lines.length === maxLines) return lines;
+    }
+  }
+
+  if (current && lines.length < maxLines) lines.push(current);
+  return lines;
 }
