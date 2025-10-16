@@ -686,7 +686,7 @@ app.post('/center-crop-qu-zo', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const canvas = await centerCropQuZ(img, zoom, website);
+    const canvas = await centerCropQuZ(img, website);
 
     const filename = `img-center-crop-qu-z-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
