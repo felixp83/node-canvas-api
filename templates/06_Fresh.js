@@ -93,28 +93,36 @@ module.exports = async function generateFreshTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
-  // === Bild (unter dem weißen Bereich, ggf. beschnitten) ===
+  // === Bild (unter dem weißen Bereich, ggf. beschnitten oder skaliert) ===
   const imgY = topWhiteHeight;
-  const imgHeight = targetHeight - topWhiteHeight;
+  const imgTargetHeight = targetHeight - topWhiteHeight; // 1000px bei 1000x1500-Ziel
+  const imgTargetWidth = targetWidth; // 1000px
 
   if (img && img.width && img.height) {
     const imgAspect = img.width / img.height;
-    const canvasAspect = targetWidth / imgHeight;
+    const targetAspect = imgTargetWidth / imgTargetHeight; // 1.0 (quadratisch)
 
-    let drawWidth, drawHeight, drawX, drawY;
-    if (imgAspect > canvasAspect) {
-      drawHeight = imgHeight;
-      drawWidth = imgHeight * imgAspect;
-      drawX = (targetWidth - drawWidth) / 2;
-      drawY = imgY;
-    } else {
-      drawWidth = targetWidth;
-      drawHeight = targetWidth / imgAspect;
-      drawX = 0;
-      drawY = imgY;
+    let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+
+    // Wir behalten die gesamte Höhe und schneiden links/rechts bei Bedarf ab
+    if (imgAspect > targetAspect) {
+      // Bild ist breiter → wir schneiden seitlich ab
+      const newWidth = img.height * targetAspect;
+      srcX = (img.width - newWidth) / 2;
+      srcW = newWidth;
+    } else if (imgAspect < targetAspect) {
+      // Bild ist höher → wir schneiden oben/unten ab (selten der Fall)
+      const newHeight = img.width / targetAspect;
+      srcY = (img.height - newHeight) / 2;
+      srcH = newHeight;
     }
 
-    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+    // Jetzt zeichnen wir den beschnittenen Ausschnitt in den unteren Bereich des Canvas
+    ctx.drawImage(
+      img,
+      srcX, srcY, srcW, srcH,          // Quellbereich (Cropping)
+      0, imgY, imgTargetWidth, imgTargetHeight // Zielbereich (1000x1000 unten)
+    );
   }
 
   // === Website unten (dynamisch) mit Fallback ===
