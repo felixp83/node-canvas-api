@@ -1,41 +1,58 @@
 const { createCanvas } = require('canvas');
 
 module.exports = async function generateTemplate(img, overlayText, _targetWidth, _targetHeight, website) {
-  // === Canvas immer 1000x1500 px ===
+  // === Canvas fix 1000x1500 px ===
   const targetWidth = 1000;
   const targetHeight = 1500;
 
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Hintergrund ===
+  // === Hintergrund hellblau ===
   ctx.fillStyle = '#d1dcd8';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bildbereich ===
-  let dx = 0;
-  let dy = 0;
-  let drawWidth = targetWidth;
-  let drawHeight = img.height;
+  // === Bild einfügen ===
+  if (img && img.width && img.height) {
+    const imgAspect = img.width / img.height;
+    const canvasAspect = targetWidth / targetHeight;
 
-  if (img.width === img.height) {
-    // quadratisches Bild: oben platzieren, Breite auf Canvas anpassen
-    drawWidth = targetWidth;
-    drawHeight = targetWidth; // behält Quadrat
-    dy = 0;
-  } else if (img.height / img.width === 3 / 2) {
-    // Bild passt bereits 1000x1500
-    drawWidth = targetWidth;
-    drawHeight = targetHeight;
-    dy = 0;
-  } else {
-    // andere Formate: skaliere Breite auf Canvas, Höhe proportional
-    drawWidth = targetWidth;
-    drawHeight = (img.height / img.width) * targetWidth;
-    dy = 0;
+    let dx = 0;
+    let dy = 0;
+    let dw = targetWidth;
+    let dh = targetHeight;
+
+    if (img.width === img.height) {
+      // Quadratisches Bild: oben platzieren, 1000x1000
+      const squareSize = Math.min(targetWidth, targetHeight * 2 / 3);
+      const sSize = img.width;
+      const sx = 0;
+      const sy = 0;
+      dx = 0;
+      dy = 0;
+      dw = targetWidth;
+      dh = squareSize;
+
+      ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, dw, dh);
+    } else if (img.height === targetHeight && img.width === targetWidth) {
+      // Hochformatbild 1000x1500 px: Hintergrund komplett
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+    } else if (imgAspect > canvasAspect) {
+      // Breiter als hoch: auf Höhe skalieren, zentriert
+      dh = targetHeight;
+      dw = dh * imgAspect;
+      dx = (targetWidth - dw) / 2;
+      dy = 0;
+      ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+    } else {
+      // Hochformat oder gleiches Verhältnis: auf Breite skalieren
+      dw = targetWidth;
+      dh = dw / imgAspect;
+      dx = 0;
+      dy = 0;
+      ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+    }
   }
-
-  ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, drawWidth, drawHeight);
 
   // === Footer-Abstand (für URL und Button) ===
   const footerPadding = targetHeight * 0.05;
@@ -58,7 +75,7 @@ module.exports = async function generateTemplate(img, overlayText, _targetWidth,
   const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 50;
 
   // === Haupttext dynamisch in freiem Raum ===
-  const topY = drawHeight + 50;
+  const topY = img.width === img.height ? Math.min(targetWidth, targetHeight * 2 / 3) + 50 : 50;
   const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
@@ -84,7 +101,6 @@ module.exports = async function generateTemplate(img, overlayText, _targetWidth,
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-
   lines.forEach((line, i) => {
     ctx.fillText(line, targetWidth / 2, textStartY + i * lineHeight);
   });
@@ -149,7 +165,9 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     radius = { tl: radius, tr: radius, br: radius, bl: radius };
   } else {
     const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
-    for (let side in defaultRadius) { radius[side] = radius[side] || defaultRadius[side]; }
+    for (let side in defaultRadius) {
+      radius[side] = radius[side] || defaultRadius[side];
+    }
   }
   ctx.beginPath();
   ctx.moveTo(x + radius.tl, y);
