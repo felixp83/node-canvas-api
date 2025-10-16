@@ -23,7 +23,7 @@ const graphic = require('./templates/09_Graphic');
 const centerCropQu = require('./templatesCrop/07_centerCropQu');
 const centerCropQuZ = require('./templatesCrop/08_centerCropQuZ');
 const centerVignette = require('./templatesCrop/09_centerVignette');
-const oval = require('./templatesCrop/10_oval');
+const oval = require('./templates/10_oval');
 
 const app = express();
 const port = process.env.PORT || 3000;
