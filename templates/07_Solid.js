@@ -18,22 +18,17 @@ module.exports = async function generateSolidTemplate(
   ctx.fillStyle = '#d5aa82';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild als Kreis (zentriert horizontal, vertikal unter Berücksichtigung der CTA) ===
+  // === Bild als Kreis (zentriert horizontal, 30 px nach oben) ===
   const radius = Math.min(targetWidth, targetHeight) * 0.41;
   const centerX = targetWidth / 2;
 
-  // Vertikale Position: immer so, dass nichts vom Overlay-Text oder CTA überlappt wird
   let centerY;
   if (img && img.height) {
-    const imageHeight = img.height;
-    // Minimum y-Position: Abstand von oben für Overlay/CTA
-    const minY = 300; // z.B. Puffer für CTA und Text
-    // Maximum y-Position: Canvas Höhe minus Bild Radius minus Puffer für Website
+    const minY = 300;
     const maxY = targetHeight - radius - 120;
-    // Setze centerY so, dass Bild immer sichtbar bleibt
-    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY);
+    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 30; // Kreis 30px nach oben
   } else {
-    centerY = targetHeight * 0.42;
+    centerY = targetHeight * 0.42 - 30;
   }
 
   ctx.save();
@@ -64,14 +59,14 @@ module.exports = async function generateSolidTemplate(
   ctx.arc(centerX, centerY, radius + ctx.lineWidth / 2, 0, Math.PI * 2);
   ctx.stroke();
 
-  // === CTA-Button (weiß mit roter Schrift) ===
+  // === CTA-Button (weiß mit roter Schrift), insgesamt 50 px nach oben verschoben ===
   const ctaText = 'WEITERLESEN';
   const ctaFontSize = 49.4;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 80;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = centerY - radius - ctaHeight - 55;
+  const ctaY = centerY - radius - ctaHeight - 20 - 30; // 30 px Kreis + 20 px zusätzlich
 
   ctx.fillStyle = '#fff';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
@@ -100,7 +95,7 @@ module.exports = async function generateSolidTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
-  // === Overlay-Text (zwischen Bildkreis und Website) ===
+  // === Overlay-Text (zwischen Kreis und Website) ===
   const maxTextWidth = targetWidth * 0.8;
   const minGapToCircle = 20;
   const gapAboveUrl = 24;
