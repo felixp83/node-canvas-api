@@ -674,7 +674,7 @@ app.post('/center-crop-qu', async (req, res) => {
 });
 
 // Route: Center Crop Quadrat Zoom
-app.post('/center-crop-Qu-Zo', async (req, res) => {
+app.post('/center-crop-qu-zo', async (req, res) => {
   const imageUrl = req.body.url;
   const website = req.body.website || null;
 
