@@ -66,7 +66,7 @@ module.exports = async function generateSolidTemplate(
   const ctaWidth = ctx.measureText(ctaText).width + 80;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = centerY - radius - ctaHeight - 130; // CTA 130 px nach oben
+  const ctaY = centerY - radius - ctaHeight - 105; // CTA 130 px nach oben
 
   ctx.fillStyle = '#fff';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
