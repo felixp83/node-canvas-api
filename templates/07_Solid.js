@@ -26,9 +26,9 @@ module.exports = async function generateSolidTemplate(
   if (img && img.height) {
     const minY = 300;
     const maxY = targetHeight - radius - 120;
-    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 95; // Kreis 70px nach oben
+    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 110; // Kreis 70px nach oben
   } else {
-    centerY = targetHeight * 0.42 - 95;
+    centerY = targetHeight * 0.42 - 110;
   }
 
   ctx.save();
