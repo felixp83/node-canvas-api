@@ -23,6 +23,7 @@ const graphic = require('./templates/09_Graphic');
 const centerCropQu = require('./templatesCrop/07_centerCropQu');
 const centerCropQuZ = require('./templatesCrop/08_centerCropQuZ');
 const centerVignette = require('./templatesCrop/09_centerVignette');
+const oval = require('./templatesCrop/10_oval');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -737,6 +738,38 @@ app.post('/center-qu-v', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
+
+// Route: Oval Template
+app.post('/oval', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await oval(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-oval-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
 
 
 
