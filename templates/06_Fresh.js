@@ -93,36 +93,12 @@ module.exports = async function generateFreshTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
-  // === Bild (unter dem weißen Bereich, ggf. beschnitten oder skaliert) ===
-  const imgY = topWhiteHeight;
-  const imgTargetHeight = targetHeight - topWhiteHeight; // 1000px bei 1000x1500-Ziel
-  const imgTargetWidth = targetWidth; // 1000px
-
+  // === Bild (unten platzieren, ohne Beschnitt oder Skalierung) ===
   if (img && img.width && img.height) {
-    const imgAspect = img.width / img.height;
-    const targetAspect = imgTargetWidth / imgTargetHeight; // 1.0 (quadratisch)
-
-    let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
-
-    // Wir behalten die gesamte Höhe und schneiden links/rechts bei Bedarf ab
-    if (imgAspect > targetAspect) {
-      // Bild ist breiter → wir schneiden seitlich ab
-      const newWidth = img.height * targetAspect;
-      srcX = (img.width - newWidth) / 2;
-      srcW = newWidth;
-    } else if (imgAspect < targetAspect) {
-      // Bild ist höher → wir schneiden oben/unten ab (selten der Fall)
-      const newHeight = img.width / targetAspect;
-      srcY = (img.height - newHeight) / 2;
-      srcH = newHeight;
-    }
-
-    // Jetzt zeichnen wir den beschnittenen Ausschnitt in den unteren Bereich des Canvas
-    ctx.drawImage(
-      img,
-      srcX, srcY, srcW, srcH,          // Quellbereich (Cropping)
-      0, imgY, imgTargetWidth, imgTargetHeight // Zielbereich (1000x1000 unten)
-    );
+    // Wenn das Bild höher als 1000px ist, oben anfangen (z.B. 1000x1500)
+    // Wenn das Bild genau 1000px hoch ist, direkt unter dem weißen Bereich platzieren
+    let drawY = img.height > (targetHeight - topWhiteHeight) ? 0 : topWhiteHeight;
+    ctx.drawImage(img, 0, drawY);
   }
 
   // === Website unten (dynamisch) mit Fallback ===
