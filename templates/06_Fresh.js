@@ -3,24 +3,27 @@ const { createCanvas } = require('canvas');
 module.exports = async function generateFreshTemplate(
   img,
   overlayText,
-  targetWidth,
-  targetHeight,
+  _targetWidth,
+  _targetHeight,
   website
 ) {
+  // === Endformat immer 1000x1500 ===
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Fester oberer weißer Bereich (immer sichtbar oben) ===
-  const topWhiteHeight = 500;
+  // === Fester oberer hellblauer Bereich ===
+  const topBlueHeight = 500;
 
-  // === Hintergrund gesplittet: weiß oben, Bild unten ===
   ctx.fillStyle = '#dfecf2';
-  ctx.fillRect(0, 0, targetWidth, topWhiteHeight);
+  ctx.fillRect(0, 0, targetWidth, topBlueHeight);
 
   // === Headline vorbereiten ===
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = topWhiteHeight * 0.5;
+  const maxTextBlockHeight = topBlueHeight * 0.5;
 
   let bestConfig = {
     fontSize: 16,
@@ -66,7 +69,7 @@ module.exports = async function generateFreshTemplate(
   }
 
   ctx.font = `900 ${bestConfig.fontSize}px "Open Sans"`;
-  const textY = topWhiteHeight / 2 - bestConfig.totalHeight / 2 + 55;
+  const textY = topBlueHeight / 2 - bestConfig.totalHeight / 2 + 55;
 
   ctx.fillStyle = '#3B2F2F';
   ctx.textAlign = 'center';
@@ -75,7 +78,7 @@ module.exports = async function generateFreshTemplate(
     ctx.fillText(line, targetWidth / 2, textY + index * bestConfig.lineHeight);
   });
 
-  // === CTA-Kapsel oben (im weißen Bereich) ===
+  // === CTA-Kapsel im hellblauen Bereich ===
   const ctaText = 'ZUM ARTIKEL';
   const ctaFontSize = 48;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
@@ -93,15 +96,16 @@ module.exports = async function generateFreshTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(ctaText, targetWidth / 2, ctaY + ctaHeight / 2);
 
-  // === Bild (unten platzieren, ohne Beschnitt oder Skalierung) ===
+  // === Bild (unter dem hellblauen Bereich, unverändert) ===
   if (img && img.width && img.height) {
-    // Wenn das Bild höher als 1000px ist, oben anfangen (z.B. 1000x1500)
-    // Wenn das Bild genau 1000px hoch ist, direkt unter dem weißen Bereich platzieren
-    let drawY = img.height > (targetHeight - topWhiteHeight) ? 0 : topWhiteHeight;
-    ctx.drawImage(img, 0, drawY);
+    const drawX = Math.round((targetWidth - img.width) / 2);
+    const drawY = topBlueHeight; // immer direkt unter dem hellblauen Bereich
+
+    // Falls das Bild über das Canvas hinausgeht, wird es unten abgeschnitten (Canvas clippt automatisch)
+    ctx.drawImage(img, drawX, drawY);
   }
 
-  // === Website unten (dynamisch) mit Fallback ===
+  // === Website unten ===
   const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
 
   const urlFontSize = 42;
