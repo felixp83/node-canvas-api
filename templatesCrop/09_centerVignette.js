@@ -35,11 +35,11 @@ module.exports = async function centerCropSquare(img) {
 
   // --- Vignette hinzufügen ---
   const vignette = ctx.createRadialGradient(
-    targetWidth / 2, targetHeight / 2, targetWidth * 0.4, // innerer Kreis (transparent)
+    targetWidth / 2, targetHeight / 2, targetWidth * 0.36, // innerer Kreis (transparent)
     targetWidth / 2, targetHeight / 2, targetWidth / 2  // äußerer Kreis (dunkel)
   );
   vignette.addColorStop(0, 'rgba(0,0,0,0)');   // Zentrum transparent
-  vignette.addColorStop(1, 'rgba(0,0,0,0.25)'); // Ränder leicht abgedunkelt
+  vignette.addColorStop(1, 'rgba(0,0,0,0.3)'); // Ränder leicht abgedunkelt
 
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, targetWidth, targetHeight);
