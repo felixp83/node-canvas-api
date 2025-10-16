@@ -27,7 +27,7 @@ module.exports = async function centerCropSquare(img, zoomPercent = 2) {
   let sy = (imgHeight - cropHeight) / 2;
 
   // Zoom anwenden
-  const zoomFactor = 1 + zoomPercent / 1.50; // z.B. 15% => 1.15
+  const zoomFactor = 1 + zoomPercent / 100; // z.B. 15% => 1.15
   const zoomedWidth = cropWidth / zoomFactor;
   const zoomedHeight = cropHeight / zoomFactor;
 
