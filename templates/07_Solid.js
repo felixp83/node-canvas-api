@@ -18,7 +18,7 @@ module.exports = async function generateSolidTemplate(
   ctx.fillStyle = '#d5aa82';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild als Kreis (zentriert horizontal, 70 px nach oben) ===
+  // === Bild als Kreis (zentriert horizontal, 95 px nach oben) ===
   const radius = Math.min(targetWidth, targetHeight) * 0.41;
   const centerX = targetWidth / 2;
 
@@ -26,9 +26,9 @@ module.exports = async function generateSolidTemplate(
   if (img && img.height) {
     const minY = 300;
     const maxY = targetHeight - radius - 120;
-    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 70; // Kreis 70px nach oben
+    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 95; // Kreis 95px nach oben
   } else {
-    centerY = targetHeight * 0.42 - 70;
+    centerY = targetHeight * 0.42 - 95;
   }
 
   ctx.save();
@@ -59,14 +59,14 @@ module.exports = async function generateSolidTemplate(
   ctx.arc(centerX, centerY, radius + ctx.lineWidth / 2, 0, Math.PI * 2);
   ctx.stroke();
 
-  // === CTA-Button (weiß mit roter Schrift), insgesamt 130 px nach oben ===
+  // === CTA-Button (weiß mit roter Schrift), weiterhin 130 px nach oben ===
   const ctaText = 'WEITERLESEN';
   const ctaFontSize = 49.4;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 80;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = centerY - radius - ctaHeight - 130; // CTA 130 px nach oben
+  const ctaY = centerY - radius - ctaHeight - 130; // unverändert
 
   ctx.fillStyle = '#fff';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
