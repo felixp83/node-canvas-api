@@ -1,6 +1,10 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
+module.exports = async function generateTemplate(img, overlayText, _targetWidth, _targetHeight, website) {
+  // === Canvas immer 1000x1500 px ===
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -8,26 +12,34 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = '#d1dcd8';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bildbereich (quadratisch, max 2/3 Höhe) ===
-  const squareSize = Math.min(targetWidth, targetHeight * 2 / 3);
-  let sx, sy, sSize;
-  if (img.width > img.height) {
-    sSize = img.height;
-    sx = (img.width - sSize) / 2;
-    sy = 0;
+  // === Bildbereich ===
+  let dx = 0;
+  let dy = 0;
+  let drawWidth = targetWidth;
+  let drawHeight = img.height;
+
+  if (img.width === img.height) {
+    // quadratisches Bild: oben platzieren, Breite auf Canvas anpassen
+    drawWidth = targetWidth;
+    drawHeight = targetWidth; // behält Quadrat
+    dy = 0;
+  } else if (img.height / img.width === 3 / 2) {
+    // Bild passt bereits 1000x1500
+    drawWidth = targetWidth;
+    drawHeight = targetHeight;
+    dy = 0;
   } else {
-    sSize = img.width;
-    sx = 0;
-    sy = (img.height - sSize) / 2;
+    // andere Formate: skaliere Breite auf Canvas, Höhe proportional
+    drawWidth = targetWidth;
+    drawHeight = (img.height / img.width) * targetWidth;
+    dy = 0;
   }
 
-  const dx = (targetWidth - squareSize) / 2;
-  const dy = 0;
-  ctx.drawImage(img, sx, sy, sSize, sSize, dx, dy, squareSize, squareSize);
+  ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, drawWidth, drawHeight);
 
   // === Footer-Abstand (für URL und Button) ===
   const footerPadding = targetHeight * 0.05;
-  const urlFontSize = 48; // ⬅️ Geändert von 32 auf 48
+  const urlFontSize = 48;
   const urlText = website || "www.montessori-helden.de";
 
   // === Button-Parameter ===
@@ -46,7 +58,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const buttonY = targetHeight - footerPadding * 2 - urlFontSize - buttonHeight + 50;
 
   // === Haupttext dynamisch in freiem Raum ===
-  const topY = squareSize + 50;
+  const topY = drawHeight + 50;
   const bottomY = buttonY - 20;
   const textAreaHeight = bottomY - topY;
 
@@ -88,7 +100,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL ganz unten ===
-  ctx.font = `normal ${urlFontSize}px "Open Sans"`; // ⬅️ Font-Größe 48px
+  ctx.font = `normal ${urlFontSize}px "Open Sans"`;
   ctx.fillStyle = '#5b4636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
@@ -103,16 +115,9 @@ function breakLongWord(ctx, word, maxWidth) {
   for (let char of word) {
     const test = current + char;
     if (ctx.measureText(test).width > maxWidth) {
-      if (current.length > 0) {
-        parts.push(current + '-');
-        current = char;
-      } else {
-        parts.push(char);
-        current = '';
-      }
-    } else {
-      current = test;
-    }
+      if (current.length > 0) { parts.push(current + '-'); current = char; } 
+      else { parts.push(char); current = ''; }
+    } else { current = test; }
   }
   if (current.length > 0) parts.push(current);
   return parts;
@@ -121,32 +126,21 @@ function breakLongWord(ctx, word, maxWidth) {
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [], currentLine = '';
-
   for (let word of words) {
     if (ctx.measureText(word).width > maxWidth) {
       const broken = breakLongWord(ctx, word, maxWidth);
       for (let part of broken) {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = '';
-        }
+        if (currentLine.length > 0) { lines.push(currentLine); currentLine = ''; }
         lines.push(part);
         if (lines.length === maxLines) return lines;
       }
       continue;
     }
-
     const testLine = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
-      currentLine = testLine;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-      if (lines.length === maxLines) return lines;
-    }
+    if (ctx.measureText(testLine).width <= maxWidth) { currentLine = testLine; }
+    else { if(currentLine) lines.push(currentLine); currentLine = word; if(lines.length===maxLines) return lines;}
   }
-
-  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+  if(currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
 }
 
@@ -155,9 +149,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     radius = { tl: radius, tr: radius, br: radius, bl: radius };
   } else {
     const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
-    for (let side in defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
-    }
+    for (let side in defaultRadius) { radius[side] = radius[side] || defaultRadius[side]; }
   }
   ctx.beginPath();
   ctx.moveTo(x + radius.tl, y);
