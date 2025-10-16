@@ -21,7 +21,7 @@ const cropBlur = require('./templatesCrop/01_11_centerCropBlur');
 const fancy = require('./templates/08_Fancy');
 const graphic = require('./templates/09_Graphic');
 const centerCropQu = require('./templatesCrop/07_centerCropQu');
-const centerCropQu = require('./templatesCrop/08_centerCropQuZ');
+const centerCropQuZ = require('./templatesCrop/08_centerCropQuZ');
 
 const app = express();
 const port = process.env.PORT || 3000;
