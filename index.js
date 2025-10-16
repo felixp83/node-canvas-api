@@ -770,6 +770,12 @@ app.post('/oval', async (req, res) => {
       const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
       res.json({ imgUrl });
     });
+    
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
 
 
 
