@@ -3,10 +3,14 @@ const { createCanvas } = require('canvas');
 module.exports = async function generateSolidTemplate(
   img,
   overlayText,
-  targetWidth,
-  targetHeight,
+  _targetWidth,
+  _targetHeight,
   website
 ) {
+  // === Canvas immer 1000x1500 px ===
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -14,10 +18,23 @@ module.exports = async function generateSolidTemplate(
   ctx.fillStyle = '#d5aa82';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild als Kreis ===
-  const radius = Math.min(targetWidth, targetHeight) * 0.41; // Anpassung des Durchmessers
+  // === Bild als Kreis (zentriert horizontal, vertikal unter Berücksichtigung der CTA) ===
+  const radius = Math.min(targetWidth, targetHeight) * 0.41;
   const centerX = targetWidth / 2;
-  const centerY = targetHeight * 0.42; // etwas tiefer gesetzt
+
+  // Vertikale Position: immer so, dass nichts vom Overlay-Text oder CTA überlappt wird
+  let centerY;
+  if (img && img.height) {
+    const imageHeight = img.height;
+    // Minimum y-Position: Abstand von oben für Overlay/CTA
+    const minY = 300; // z.B. Puffer für CTA und Text
+    // Maximum y-Position: Canvas Höhe minus Bild Radius minus Puffer für Website
+    const maxY = targetHeight - radius - 120;
+    // Setze centerY so, dass Bild immer sichtbar bleibt
+    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY);
+  } else {
+    centerY = targetHeight * 0.42;
+  }
 
   ctx.save();
   ctx.beginPath();
@@ -25,23 +42,18 @@ module.exports = async function generateSolidTemplate(
   ctx.closePath();
   ctx.clip();
 
-  // Kein Sepia-Filter
-  let sSize, sx, sy;
-  if (img.width > img.height) {
-    sSize = img.height;
-    sx = (img.width - sSize) / 2;
-    sy = 0;
-  } else {
-    sSize = img.width;
-    sx = 0;
-    sy = (img.height - sSize) / 2;
+  if (img && img.width && img.height) {
+    const sSize = Math.min(img.width, img.height);
+    const sx = (img.width - sSize) / 2;
+    const sy = (img.height - sSize) / 2;
+
+    ctx.drawImage(
+      img,
+      sx, sy, sSize, sSize,
+      centerX - radius, centerY - radius,
+      radius * 2, radius * 2
+    );
   }
-  ctx.drawImage(
-    img,
-    sx, sy, sSize, sSize,
-    centerX - radius, centerY - radius,
-    radius * 2, radius * 2
-  );
   ctx.restore();
 
   // Weißer Ring um das Bild
@@ -54,12 +66,12 @@ module.exports = async function generateSolidTemplate(
 
   // === CTA-Button (weiß mit roter Schrift) ===
   const ctaText = 'WEITERLESEN';
-  const ctaFontSize = 49.4; // 38 * 1.3
+  const ctaFontSize = 49.4;
   ctx.font = `bold ${ctaFontSize}px "Open Sans"`;
   const ctaWidth = ctx.measureText(ctaText).width + 80;
   const ctaHeight = ctaFontSize * 1.6;
   const ctaX = (targetWidth - ctaWidth) / 2;
-  const ctaY = centerY - radius - ctaHeight - 55; // 55px oberhalb des Kreisrandes
+  const ctaY = centerY - radius - ctaHeight - 55;
 
   ctx.fillStyle = '#fff';
   roundRect(ctx, ctaX, ctaY, ctaWidth, ctaHeight, ctaHeight / 2);
@@ -72,12 +84,12 @@ module.exports = async function generateSolidTemplate(
 
   // === Website unten (immer fix) ===
   const urlText = (website && website.trim() ? website : 'www.montessori-helden.de').toUpperCase();
-  const urlFontSize = 42; // Fix
+  const urlFontSize = 42;
   ctx.font = `bold ${urlFontSize}px "Open Sans"`;
   const urlWidth = ctx.measureText(urlText).width + 160;
   const urlHeight = urlFontSize * 1.6;
   const urlX = (targetWidth - urlWidth) / 2;
-  const urlY = targetHeight - urlHeight - 60; // Fix Abstand
+  const urlY = targetHeight - urlHeight - 60;
 
   ctx.fillStyle = 'rgba(255,255,255,0.25)';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, urlHeight / 2);
@@ -88,80 +100,45 @@ module.exports = async function generateSolidTemplate(
   ctx.textBaseline = 'middle';
   ctx.fillText(urlText, targetWidth / 2, urlY + urlHeight / 2);
 
-  // === Overlay-Text (stabiler Umbruch wie im Referenz-Template) ===
+  // === Overlay-Text (zwischen Bildkreis und Website) ===
   const maxTextWidth = targetWidth * 0.8;
-
-  // Abstände
-  const minGapToCircle = 20;  // mindestens 20 px Abstand zum äußeren Kreisrand
-  const gapAboveUrl = 24;     // Abstand oberhalb Website-Bereich
-
-  // Außenradius inkl. halber Ringbreite
+  const minGapToCircle = 20;
+  const gapAboveUrl = 24;
   const outerRadius = radius + ringLineWidth / 2;
-
-  // Vertikaler Bereich zwischen Kreis und Website-Bereich
   const topLimit = centerY + outerRadius + minGapToCircle;
   const bottomLimit = urlY - gapAboveUrl;
   const availableHeight = Math.max(0, bottomLimit - topLimit);
 
-  // Suche die größte Schriftgröße, die vollständig passt (inkl. Content-Vollständigkeit)
-  let bestConfig = {
-    fontSize: 16,
-    lines: [],
-    lineHeight: 0,
-    totalHeight: Infinity
-  };
+  let bestConfig = { fontSize: 16, lines: [], lineHeight: 0, totalHeight: Infinity };
 
   for (let size = 128; size >= 10; size -= 2) {
     ctx.font = `900 ${size}px "Open Sans"`;
     const lineHeight = size * 1.3;
-
-    // Bevorzuge 3 Zeilen, dann 2 (wie dein Referenzcode testet mehrere Varianten)
     for (let maxLines of [3, 2]) {
       const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = testLines.length * lineHeight;
-
-      const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
-      const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
-
-      if (
-        testLines.length <= maxLines &&
-        totalTextHeight <= availableHeight &&
-        joined === original &&
-        size > bestConfig.fontSize
-      ) {
-        bestConfig = {
-          fontSize: size,
-          lines: testLines,
-          lineHeight,
-          totalHeight: totalTextHeight
-        };
+      const joined = testLines.join('').replace(/[-\s]/g,'');
+      const original = overlayText.replace(/[-\s]/g,'');
+      if (testLines.length <= maxLines && totalTextHeight <= availableHeight && joined === original && size > bestConfig.fontSize) {
+        bestConfig = { fontSize: size, lines: testLines, lineHeight, totalHeight: totalTextHeight };
       }
     }
   }
 
-  // Fallback, falls nichts „perfekt“ passt: kleinste sinnvolle Größe nehmen und bestmöglich umbrechen
   if (!bestConfig.lines.length) {
     const size = 12;
     ctx.font = `900 ${size}px "Open Sans"`;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, 3);
     const lineHeight = size * 1.3;
     const totalTextHeight = Math.min(testLines.length * lineHeight, availableHeight);
-
-    bestConfig = {
-      fontSize: size,
-      lines: testLines,
-      lineHeight,
-      totalHeight: totalTextHeight
-    };
+    bestConfig = { fontSize: size, lines: testLines, lineHeight, totalHeight: totalTextHeight };
   }
 
-  // Endgültige Y-Position (Start am oberen Limit, damit Mindestabstand gewahrt bleibt)
   let textY = topLimit;
   if (textY + bestConfig.totalHeight > bottomLimit) {
     textY = Math.max(topLimit, bottomLimit - bestConfig.totalHeight);
   }
 
-  // Zeichnen
   ctx.font = `900 ${bestConfig.fontSize}px "Open Sans"`;
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
@@ -193,16 +170,9 @@ function breakLongWord(ctx, word, maxWidth) {
   for (let char of word) {
     const test = current + char;
     if (ctx.measureText(test).width > maxWidth) {
-      if (current.length > 0) {
-        parts.push(current + '-');
-        current = char;
-      } else {
-        parts.push(char);
-        current = '';
-      }
-    } else {
-      current = test;
-    }
+      if (current.length > 0) { parts.push(current + '-'); current = char; } 
+      else { parts.push(char); current = ''; }
+    } else { current = test; }
   }
   if (current.length > 0) parts.push(current);
   return parts;
@@ -211,31 +181,20 @@ function breakLongWord(ctx, word, maxWidth) {
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [], currentLine = '';
-
   for (let word of words) {
     if (ctx.measureText(word).width > maxWidth) {
       const broken = breakLongWord(ctx, word, maxWidth);
       for (let part of broken) {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = '';
-        }
+        if (currentLine.length > 0) { lines.push(currentLine); currentLine = ''; }
         lines.push(part);
-        if (lines.length === maxLines) return lines; // harte Kappung, aber oben prüfen wir Content-Vollständigkeit
+        if (lines.length === maxLines) return lines;
       }
       continue;
     }
-
     const testLine = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
-      currentLine = testLine;
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-      if (lines.length === maxLines) return lines; // harte Kappung
-    }
+    if (ctx.measureText(testLine).width <= maxWidth) { currentLine = testLine; }
+    else { if(currentLine) lines.push(currentLine); currentLine = word; if(lines.length===maxLines) return lines;}
   }
-
-  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+  if(currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
 }
