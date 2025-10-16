@@ -20,6 +20,7 @@ const autoCrop = require('./templatesCrop/06_autoCrop');
 const cropBlur = require('./templatesCrop/01_11_centerCropBlur');
 const fancy = require('./templates/08_Fancy');
 const graphic = require('./templates/09_Graphic');
+const centerCropQu = require('./templatesCrop/07_centerCropQu');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -638,6 +639,39 @@ app.post('/graphic', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   } 
 });
+
+// Route: Center Crop Quadrat Template
+app.post('/center-crop-qu', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await centerCropQu(img, website);
+
+    const filename = `img-center-crop-qu-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
 });
