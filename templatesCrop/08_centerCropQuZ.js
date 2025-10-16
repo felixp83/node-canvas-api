@@ -5,7 +5,7 @@ const { createCanvas } = require('canvas');
  * @param {Image} img - Das Input-Bild
  * @param {number} zoomPercent - Zoom in Prozent (Standard = 15)
  */
-module.exports = async function centerCropSquare(img, zoomPercent = 50) {
+module.exports = async function centerCropSquare(img, zoomPercent = 12) {
   const targetSize = 1000; // quadratisches Ziel
   const targetWidth = targetSize;
   const targetHeight = targetSize;
