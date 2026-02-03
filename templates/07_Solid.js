@@ -19,7 +19,7 @@ module.exports = async function generateSolidTemplate(
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Bild als Kreis (zentriert horizontal, 70 px nach oben) ===
-  const radius = Math.min(targetWidth, targetHeight) * 0.41;
+  const radius = Math.min(targetWidth, targetHeight) * 0.82;
   const centerX = targetWidth / 2;
 
   let centerY;
