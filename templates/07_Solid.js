@@ -22,14 +22,20 @@ module.exports = async function generateSolidTemplate(
   const radius = Math.min(targetWidth, targetHeight) * 0.54;
   const centerX = targetWidth / 2;
 
-  let centerY;
-  if (img && img.height) {
-    const minY = 300;
-    const maxY = targetHeight - radius - 120;
-    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 95; // Kreis 70px nach oben
-  } else {
-    centerY = targetHeight * 0.42 + 450;
-  }
+let centerY;
+
+const minY = 300;
+const maxY = targetHeight - radius - 120;
+const circleOffsetY = -200; // <-- HIER drehen 🎛️
+
+if (img && img.height) {
+  centerY = Math.min(
+    Math.max(minY + radius, targetHeight / 2),
+    maxY
+  ) + circleOffsetY;
+} else {
+  centerY = targetHeight * 0.42 + circleOffsetY;
+}
 
   ctx.save();
   ctx.beginPath();
