@@ -19,23 +19,17 @@ module.exports = async function generateSolidTemplate(
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Bild als Kreis (zentriert horizontal, 70 px nach oben) ===
-  const radius = Math.min(targetWidth, targetHeight) * 0.65;
+  const radius = Math.min(targetWidth, targetHeight) * 0.82;
   const centerX = targetWidth / 2;
 
-let centerY;
-
-const minY = 300;
-const maxY = targetHeight - radius - 120;
-const circleOffsetY = -550; // <-- HIER drehen 🎛️
-
-if (img && img.height) {
-  centerY = Math.min(
-    Math.max(minY + radius, targetHeight / 2),
-    maxY
-  ) + circleOffsetY;
-} else {
-  centerY = targetHeight * 0.42 + circleOffsetY;
-}
+  let centerY;
+  if (img && img.height) {
+    const minY = 300;
+    const maxY = targetHeight - radius - 120;
+    centerY = Math.min(Math.max(minY + radius, targetHeight / 2), maxY) - 95; // Kreis 70px nach oben
+  } else {
+    centerY = targetHeight * 0.42 - 95;
+  }
 
   ctx.save();
   ctx.beginPath();
