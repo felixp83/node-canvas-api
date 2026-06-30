@@ -24,6 +24,7 @@ const centerCropQu = require('./templatesCrop/07_centerCropQu');
 const centerCropQuZ = require('./templatesCrop/08_centerCropQuZ');
 const centerVignette = require('./templatesCrop/09_centerVignette');
 const oval = require('./templates/10_Oval');
+const e_sanft = require('./templates/e_01_Sanft');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -761,6 +762,43 @@ app.post('/oval', async (req, res) => {
     const canvas = await oval(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-oval-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+    
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Route: e_Sanft Template
+app.post('/e_sanft', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await e_sanft(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-e_sanft-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
