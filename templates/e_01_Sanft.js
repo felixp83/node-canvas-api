@@ -25,8 +25,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = COLOR_CREAM;
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild einzeichnen (exakt wie Vorlage: volle Canvas-Fläche, gestreckt) ===
-  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+  // === Bild einzeichnen (volle Canvas-Fläche, aber OHNE Verzerrung) ===
+  // Wichtig: Eingangsbilder können bereits z.B. quadratisch zugeschnitten sein
+  // (z.B. durch ein vorgeschaltetes Crop-Skript), während targetWidth/targetHeight
+  // ein anderes Seitenverhältnis haben (z.B. Pinterest-Hochformat). Reines Strecken
+  // (drawImage mit nur Zielmaßen) würde das Bild dann verzerren. Daher Cover-Fit:
+  // Bild füllt die komplette Fläche, Seitenverhältnis bleibt erhalten, Überschuss
+  // wird zentriert beschnitten statt gestaucht/gestreckt.
+  drawImageCover(ctx, img, 0, 0, targetWidth, targetHeight);
 
   // === Bildbereich für den Bogen-Übergang (rein optisch, ändert nichts am Bild selbst) ===
   const imageAreaHeight = targetHeight * 0.62;
@@ -67,7 +73,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Textbereich (innerhalb des Salbeigrün-Bogens) ===
   const textZoneTop = dividerY + targetHeight * 0.025;
-  const textZoneBottom = targetHeight * 0.80;
+  const textZoneBottom = targetHeight * 0.86;
   const maxTextWidth = targetWidth * 0.82;
   const maxLines = 2;
   const maxTextBlockHeight = textZoneBottom - textZoneTop;
@@ -118,14 +124,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Call-to-Action Pill ("Read the Full Story") direkt über der URL ===
   const ctaText = 'READ THE FULL STORY';
-  const ctaFontSize = Math.max(targetWidth, targetHeight) * 0.026;
-  const ctaY = targetHeight * 0.885;
+  const ctaFontSize = Math.max(targetWidth, targetHeight) * 0.022;
+  const ctaY = targetHeight * 0.915;
 
   ctx.font = `700 ${ctaFontSize}px "Open Sans"`;
   const ctaTextSpaced = addLetterSpacingHint(ctaText);
   const ctaTextWidth = ctx.measureText(ctaTextSpaced).width;
-  const ctaPaddingX = ctaFontSize * 1.1;
-  const ctaPaddingY = ctaFontSize * 0.75;
+  const ctaPaddingX = ctaFontSize * 0.95;
+  const ctaPaddingY = ctaFontSize * 0.55;
   const ctaPillWidth = ctaTextWidth + ctaPaddingX * 2;
   const ctaPillHeight = ctaFontSize + ctaPaddingY * 1.1;
   const ctaPillX = targetWidth / 2 - ctaPillWidth / 2;
@@ -145,13 +151,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === URL / Website unten, dezent in dunklem Salbeigrün ===
   const urlText = (website || 'www.vinyara.com').toLowerCase();
-  const urlFontSize = Math.max(targetWidth, targetHeight) * 0.028;
+  const urlFontSize = Math.max(targetWidth, targetHeight) * 0.026;
 
   ctx.fillStyle = COLOR_SAGE_DK;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `600 ${urlFontSize}px "Open Sans"`;
-  ctx.fillText(addLetterSpacingHint(urlText), targetWidth / 2, targetHeight * 0.96);
+  ctx.fillText(addLetterSpacingHint(urlText), targetWidth / 2, targetHeight * 0.975);
 
   return canvas;
 };
@@ -170,6 +176,28 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+// Zeichnet das Bild wie CSS "object-fit: cover": volle Fläche, kein Verzerren,
+// überschüssiger Bildanteil wird zentriert beschnitten.
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+  let drawWidth, drawHeight, offsetX, offsetY;
+
+  if (imgRatio > boxRatio) {
+    drawHeight = h;
+    drawWidth = h * imgRatio;
+    offsetX = x - (drawWidth - w) / 2;
+    offsetY = y;
+  } else {
+    drawWidth = w;
+    drawHeight = w / imgRatio;
+    offsetX = x;
+    offsetY = y - (drawHeight - h) / 2;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 }
 
 // Leichtes "Letter-Spacing"-Gefühl für die URL (Canvas kennt kein echtes letter-spacing)
