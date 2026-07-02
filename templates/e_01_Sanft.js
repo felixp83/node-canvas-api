@@ -52,32 +52,10 @@ module.exports = async function generateTemplate(
   drawImageCover(ctx, img, 0, imageStartY, targetWidth, imageAreaHeight);
   ctx.restore();
 
-  // === Dunkler Waldgrün-Block im OBEREN Bereich ===
+  // === Dunkler Waldgrün-Block im OBEREN Bereich — gerade Kante, kein Bogen ===
   const forestBlockHeight = targetHeight * 0.43;
   ctx.fillStyle = COLOR_FOREST;
   ctx.fillRect(0, 0, targetWidth, forestBlockHeight);
-
-  // === Organischer Bogen — öffnet sich NACH UNTEN ins Bild ===
-  const arcY = forestBlockHeight;
-  ctx.save();
-  ctx.fillStyle = COLOR_FOREST;
-  ctx.beginPath();
-  ctx.moveTo(0, arcY);
-  ctx.quadraticCurveTo(targetWidth / 2, arcY + targetHeight * 0.09, targetWidth, arcY);
-  ctx.lineTo(targetWidth, 0);
-  ctx.lineTo(0, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-
-  // === Sanfter Verlauf am unteren Bogen-Rand (Bild bleibt sichtbar) ===
-  const fadeStartY = arcY + targetHeight * 0.03;
-  const fadeEndY   = arcY + targetHeight * 0.12;
-  const fadeGrad = ctx.createLinearGradient(0, fadeStartY, 0, fadeEndY);
-  fadeGrad.addColorStop(0, 'rgba(61,77,56,0.85)');
-  fadeGrad.addColorStop(1, 'rgba(61,77,56,0)');
-  ctx.fillStyle = fadeGrad;
-  ctx.fillRect(0, fadeStartY, targetWidth, fadeEndY - fadeStartY);
 
   // === Deko-Element: zwei kurze Creme-Linien + Terrakotta-Rautenpunkt ===
   const decoY = targetHeight * 0.1;
