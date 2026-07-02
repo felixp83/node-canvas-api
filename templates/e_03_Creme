@@ -1,1 +1,291 @@
+const { createCanvas } = require('canvas');
 
+/**
+ * Vinyara-Style Pinterest Template — Variante 3 (Creme Premium)
+ *
+ * Designrichtung:
+ * - Editorial / Luxury Wellness Look
+ * - Creme dominiert, Waldgrün nur als Akzentblock
+ * - Bild oben (Hero), Text unten (ruhiger Bereich)
+ * - CTA minimalistisch (Outline + leichter Fill)
+ * - Fokus: Premium Lesbarkeit + Social Feed Performance
+ */
+
+module.exports = async function generateTemplate(
+  img,
+  overlayText,
+  _targetWidth,
+  _targetHeight,
+  website
+) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
+
+  // =========================
+  // COLOR SYSTEM (Variante 3)
+  // =========================
+  const COLOR_CREAM   = '#F7F1E8';
+  const COLOR_FOREST  = '#3D4D38';
+  const COLOR_TERRA   = '#C97A53';
+  const COLOR_SOFT_BG = '#FBF7F1';
+
+  // =========================
+  // BACKGROUND
+  // =========================
+  ctx.fillStyle = COLOR_SOFT_BG;
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // =========================
+  // IMAGE AREA (TOP HERO)
+  // =========================
+  const imageHeight = targetHeight * 0.52;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, targetWidth, imageHeight);
+  ctx.clip();
+
+  drawImageCover(ctx, img, 0, 0, targetWidth, imageHeight);
+  ctx.restore();
+
+  // Soft fade into text area
+  const fade = ctx.createLinearGradient(0, imageHeight - 250, 0, imageHeight + 200);
+  fade.addColorStop(0, 'rgba(247,241,232,0)');
+  fade.addColorStop(1, COLOR_SOFT_BG);
+
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, imageHeight - 250, targetWidth, 500);
+
+  // =========================
+  // TEXT AREA
+  // =========================
+  const textZoneTop = imageHeight + targetHeight * 0.05;
+  const textZoneBottom = targetHeight * 0.78;
+
+  const maxWidth = targetWidth * 0.78;
+  const maxLines = 2;
+
+  let lines = [];
+  let chosenSize = 16;
+  let lineHeight = 0;
+
+  const setFont = (weight, size) => {
+    ctx.font = `${weight} ${size}px "Open Sans", Arial, sans-serif`;
+  };
+
+  for (let size = 110; size >= 18; size -= 2) {
+    setFont("700", size);
+    lineHeight = size * 1.25;
+
+    const testLines = wrapText(ctx, overlayText, maxWidth, maxLines);
+
+    const totalHeight = testLines.length * lineHeight;
+
+    const normalized = (s) =>
+      s.replace(/-/g, '').replace(/\s+/g, '').toLowerCase();
+
+    const joined = normalized(testLines.join(''));
+    const original = normalized(overlayText);
+
+    if (
+      testLines.length <= maxLines &&
+      totalHeight <= (textZoneBottom - textZoneTop) &&
+      joined === original
+    ) {
+      chosenSize = size;
+      lines = testLines;
+      break;
+    }
+  }
+
+  if (!lines.length) {
+    setFont("700", 18);
+    lineHeight = 18 * 1.25;
+    lines = wrapText(ctx, overlayText, maxWidth, maxLines);
+  }
+
+  // =========================
+  // HEADLINE
+  // =========================
+  ctx.fillStyle = COLOR_FOREST;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  setFont("700", chosenSize);
+
+  const blockHeight = lines.length * lineHeight;
+  let startY = textZoneTop + (textZoneBottom - textZoneTop - blockHeight) / 2 + lineHeight / 2;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, targetWidth / 2, startY + i * lineHeight);
+  });
+
+  // =========================
+  // CTA (Premium Outline + Soft Fill)
+  // =========================
+  const ctaText = "READ THE FULL STORY";
+  const ctaSize = 22;
+
+  setFont("700", ctaSize);
+
+  const spaced = addLetterSpacingHint(ctaText);
+  const textWidth = ctx.measureText(spaced).width;
+
+  const paddingX = 22;
+  const paddingY = 14;
+
+  const boxW = textWidth + paddingX * 2;
+  const boxH = ctaSize + paddingY * 2;
+
+  const x = targetWidth / 2 - boxW / 2;
+  const y = textZoneBottom - 60;
+
+  // soft fill
+  ctx.save();
+  ctx.fillStyle = 'rgba(61,77,56,0.06)';
+  roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
+  ctx.fill();
+  ctx.restore();
+
+  // outline
+  ctx.save();
+  ctx.strokeStyle = COLOR_FOREST;
+  ctx.lineWidth = 1.5;
+  roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = COLOR_FOREST;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spaced, targetWidth / 2, y + boxH / 2);
+
+  // =========================
+  // URL (Terracotta Accent)
+  // =========================
+  const url = (website || "www.vinyara.com").toLowerCase();
+
+  setFont("600", 22);
+
+  ctx.fillStyle = COLOR_TERRA;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillText(
+    addLetterSpacingHint(url),
+    targetWidth / 2,
+    targetHeight * 0.94
+  );
+
+  return canvas;
+};
+
+// =========================
+// HELPERS
+// =========================
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+
+  let drawWidth, drawHeight, offsetX, offsetY;
+
+  if (imgRatio > boxRatio) {
+    drawHeight = h;
+    drawWidth = h * imgRatio;
+    offsetX = x - (drawWidth - w) / 2;
+    offsetY = y;
+  } else {
+    drawWidth = w;
+    drawHeight = w / imgRatio;
+    offsetX = x;
+    offsetY = y - (drawHeight - h) / 2;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+}
+
+function addLetterSpacingHint(text) {
+  return text.split('').join('\u200a\u200a');
+}
+
+function breakLongWord(ctx, word, maxWidth) {
+  let parts = [];
+  let current = '';
+
+  for (const char of word) {
+    const test = current + char;
+
+    if (ctx.measureText(test).width > maxWidth) {
+      if (current) {
+        parts.push(current + '-');
+        current = char;
+      } else {
+        parts.push(char);
+        current = '';
+      }
+    } else {
+      current = test;
+    }
+  }
+
+  if (current) parts.push(current);
+  return parts;
+}
+
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = text.trim().split(/\s+/);
+  const lines = [];
+  let current = '';
+
+  for (const word of words) {
+    if (ctx.measureText(word).width > maxWidth) {
+      const broken = breakLongWord(ctx, word, maxWidth);
+
+      for (const part of broken) {
+        if (current) {
+          lines.push(current);
+          current = '';
+        }
+
+        lines.push(part);
+        if (lines.length === maxLines) return lines;
+      }
+      continue;
+    }
+
+    const test = current ? current + ' ' + word : word;
+
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      lines.push(current);
+      current = word;
+
+      if (lines.length === maxLines) return lines;
+    }
+  }
+
+  if (current && lines.length < maxLines) {
+    lines.push(current);
+  }
+
+  return lines;
+}
