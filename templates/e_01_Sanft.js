@@ -1,81 +1,122 @@
 const { createCanvas } = require('canvas');
 
 /**
- * Vinyara-Style Pinterest Template
- * Ruhiges Wellness-/Yoga-Design: Creme-Hintergrund, Salbeigrün-Akzentbogen,
- * Terrakotta-Linie, weiches organisches Layout statt harter Banner-Kante.
+ * Vinyara-Style Pinterest Template — Variante 2
  *
- * Behält die technische Logik der Vorlage bei:
+ * Gleiche Markensprache wie Variante 1, aber invertiertes Layout:
+ * - Text-/Overlay-Block sitzt OBEN, Bild nimmt die untere Fläche ein
+ * - Tiefer Waldgrün-Ton statt Salbeigrün als Hauptfläche
+ * - Bogen öffnet sich nach unten ins Bild (statt nach oben)
+ * - Deko-Element: zwei kurze Creme-Linien + Terrakotta-Rautenpunkt
+ * - CTA als Outline-Pill (Creme-Rahmen auf Waldgrün) statt gefüllte Pill
+ * - URL in Terrakotta statt dunklem Salbeigrün
+ *
+ * Technische Logik identisch zu Variante 1:
  * - Auto-Font-Sizing mit Zeilenumbruch (max. 2 Zeilen)
  * - Lange Wörter werden mit Bindestrich umbrochen
- * - Gleiche Funktionssignatur, damit deine API nichts anpassen muss
+ * - Gleiche Funktionssignatur
  */
-module.exports = async function generateTemplate(img, overlayText, targetWidth, targetHeight, website) {
+module.exports = async function generateTemplate(
+  img,
+  overlayText,
+  _targetWidth,
+  _targetHeight,
+  website
+) {
+  // Immer Pinterest-Größe
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Farbpalette (Vinyara Wellness) ===
-  const COLOR_CREAM   = '#F7F1E8'; // Hintergrund
-  const COLOR_SAGE    = '#8A9A82'; // Hauptakzent (Bogen / Banner)
-  const COLOR_SAGE_DK = '#5F6E58'; // dunkles Salbeigrün für URL/Linie
-  const COLOR_TERRA   = '#C97A53'; // Terrakotta-Akzent (dünne Linie/Punkt)
-  const COLOR_TEXT    = '#3B3A33'; // warmes Anthrazit für Headline
+  // === Farbpalette (Vinyara Wellness — Variante 2) ===
+  const COLOR_CREAM    = '#F7F1E8'; // Creme (Hintergrund, Textfarbe auf Dunkel)
+  const COLOR_FOREST   = '#3D4D38'; // tiefer Waldgrün-Ton (Hauptfläche oben)
+  const COLOR_FOREST_LT= '#536349'; // etwas heller für Outline-Details
+  const COLOR_TERRA    = '#C97A53'; // Terrakotta (URL, Rautenpunkt)
+  const COLOR_CREAM_DIM= 'rgba(247,241,232,0.55)'; // gedimmtes Creme für Outline-Pill
 
-  // === Hintergrund ===
+  // === Hintergrund (Creme, als Basis) ===
   ctx.fillStyle = COLOR_CREAM;
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild einzeichnen (volle Canvas-Fläche, aber OHNE Verzerrung) ===
-  // Wichtig: Eingangsbilder können bereits z.B. quadratisch zugeschnitten sein
-  // (z.B. durch ein vorgeschaltetes Crop-Skript), während targetWidth/targetHeight
-  // ein anderes Seitenverhältnis haben (z.B. Pinterest-Hochformat). Reines Strecken
-  // (drawImage mit nur Zielmaßen) würde das Bild dann verzerren. Daher Cover-Fit:
-  // Bild füllt die komplette Fläche, Seitenverhältnis bleibt erhalten, Überschuss
-  // wird zentriert beschnitten statt gestaucht/gestreckt.
-  drawImageCover(ctx, img, 0, 0, targetWidth, targetHeight);
+  // === Bild im UNTEREN Bereich des Canvas (object-fit: cover) ===
+  const imageStartY = targetHeight * 0.38;
+  const imageAreaHeight = targetHeight - imageStartY;
 
-  // === Bildbereich für den Bogen-Übergang (rein optisch, ändert nichts am Bild selbst) ===
-  const imageAreaHeight = targetHeight * 0.62;
-
-  // === Sanfter Verlauf am unteren Bildrand, damit der Übergang weich wirkt ===
-  const fadeHeight = imageAreaHeight * 0.18;
-  const fadeGrad = ctx.createLinearGradient(0, imageAreaHeight - fadeHeight, 0, imageAreaHeight);
-  fadeGrad.addColorStop(0, 'rgba(247,241,232,0)');
-  fadeGrad.addColorStop(1, COLOR_CREAM);
-  ctx.fillStyle = fadeGrad;
-  ctx.fillRect(0, imageAreaHeight - fadeHeight, targetWidth, fadeHeight);
-
-  // === Organischer Salbeigrün-Bogen als Trenner ===
-  const arcY = imageAreaHeight - targetHeight * 0.05;
   ctx.save();
-  ctx.fillStyle = COLOR_SAGE;
   ctx.beginPath();
-  ctx.moveTo(0, arcY + targetHeight * 0.06);
-  ctx.quadraticCurveTo(targetWidth / 2, arcY - targetHeight * 0.07, targetWidth, arcY + targetHeight * 0.06);
-  ctx.lineTo(targetWidth, targetHeight);
-  ctx.lineTo(0, targetHeight);
+  ctx.rect(0, imageStartY, targetWidth, imageAreaHeight);
+  ctx.clip();
+  drawImageCover(ctx, img, 0, imageStartY, targetWidth, imageAreaHeight);
+  ctx.restore();
+
+  // === Dunkler Waldgrün-Block im OBEREN Bereich ===
+  const forestBlockHeight = targetHeight * 0.43;
+  ctx.fillStyle = COLOR_FOREST;
+  ctx.fillRect(0, 0, targetWidth, forestBlockHeight);
+
+  // === Organischer Bogen — öffnet sich NACH UNTEN ins Bild ===
+  const arcY = forestBlockHeight;
+  ctx.save();
+  ctx.fillStyle = COLOR_FOREST;
+  ctx.beginPath();
+  ctx.moveTo(0, arcY);
+  ctx.quadraticCurveTo(targetWidth / 2, arcY + targetHeight * 0.09, targetWidth, arcY);
+  ctx.lineTo(targetWidth, 0);
+  ctx.lineTo(0, 0);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
-  // === Dünner Terrakotta-Strich als Schmuckelement über der Headline ===
-  const dividerY = arcY + targetHeight * 0.135;
-  const dividerWidth = targetWidth * 0.12;
+  // === Sanfter Verlauf am unteren Bogen-Rand (Bild bleibt sichtbar) ===
+  const fadeStartY = arcY + targetHeight * 0.03;
+  const fadeEndY   = arcY + targetHeight * 0.12;
+  const fadeGrad = ctx.createLinearGradient(0, fadeStartY, 0, fadeEndY);
+  fadeGrad.addColorStop(0, 'rgba(61,77,56,0.85)');
+  fadeGrad.addColorStop(1, 'rgba(61,77,56,0)');
+  ctx.fillStyle = fadeGrad;
+  ctx.fillRect(0, fadeStartY, targetWidth, fadeEndY - fadeStartY);
+
+  // === Deko-Element: zwei kurze Creme-Linien + Terrakotta-Rautenpunkt ===
+  const decoY = targetHeight * 0.1;
+  const lineLength = targetWidth * 0.1;
+  const gap = targetWidth * 0.045;
+  const lineThickness = Math.max(targetWidth, targetHeight) * 0.003;
+
   ctx.save();
-  ctx.strokeStyle = COLOR_TERRA;
-  ctx.lineWidth = Math.max(targetWidth, targetHeight) * 0.004;
+  ctx.strokeStyle = COLOR_CREAM;
+  ctx.lineWidth = lineThickness;
   ctx.lineCap = 'round';
+
+  // linke Linie
   ctx.beginPath();
-  ctx.moveTo(targetWidth / 2 - dividerWidth / 2, dividerY);
-  ctx.lineTo(targetWidth / 2 + dividerWidth / 2, dividerY);
+  ctx.moveTo(targetWidth / 2 - gap - lineLength, decoY);
+  ctx.lineTo(targetWidth / 2 - gap, decoY);
+  ctx.stroke();
+
+  // rechte Linie
+  ctx.beginPath();
+  ctx.moveTo(targetWidth / 2 + gap, decoY);
+  ctx.lineTo(targetWidth / 2 + gap + lineLength, decoY);
   ctx.stroke();
   ctx.restore();
 
-  // === Textbereich (innerhalb des Salbeigrün-Bogens) ===
-  const textZoneTop = dividerY + targetHeight * 0.025;
-  const textZoneBottom = targetHeight * 0.86;
-  const maxTextWidth = targetWidth * 0.82;
-  const maxLines = 2;
+  // Terrakotta-Rautenpunkt in der Mitte
+  const diamondSize = Math.max(targetWidth, targetHeight) * 0.009;
+  ctx.save();
+  ctx.fillStyle = COLOR_TERRA;
+  ctx.translate(targetWidth / 2, decoY);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillRect(-diamondSize / 2, -diamondSize / 2, diamondSize, diamondSize);
+  ctx.restore();
+
+  // === Textbereich (obere Waldgrün-Fläche) ===
+  const textZoneTop    = decoY + targetHeight * 0.04;
+  const textZoneBottom = targetHeight * 0.355;
+  const maxTextWidth      = targetWidth * 0.82;
+  const maxLines          = 2;
   const maxTextBlockHeight = textZoneBottom - textZoneTop;
 
   let chosenFontSize = 16;
@@ -88,7 +129,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
-    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+    const joined   = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
     const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
 
     if (
@@ -108,7 +149,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Headline zeichnen (warmes Creme auf Salbeigrün) ===
+  // === Headline zeichnen (Creme auf Waldgrün) ===
   ctx.fillStyle = COLOR_CREAM;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -122,25 +163,27 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.fillText(line, targetWidth / 2, y);
   });
 
-  // === Call-to-Action Pill ("Read the Full Story") direkt über der URL ===
+  // === Call-to-Action — Outline-Pill (Creme-Rahmen auf Waldgrün) ===
   const ctaText = 'READ THE FULL STORY';
   const ctaFontSize = Math.max(targetWidth, targetHeight) * 0.022;
-  const ctaY = targetHeight * 0.915;
+  const ctaY = textZoneBottom - ctaFontSize * 1.1;
 
   ctx.font = `700 ${ctaFontSize}px "Open Sans"`;
   const ctaTextSpaced = addLetterSpacingHint(ctaText);
-  const ctaTextWidth = ctx.measureText(ctaTextSpaced).width;
-  const ctaPaddingX = ctaFontSize * 0.95;
-  const ctaPaddingY = ctaFontSize * 0.55;
-  const ctaPillWidth = ctaTextWidth + ctaPaddingX * 2;
+  const ctaTextWidth  = ctx.measureText(ctaTextSpaced).width;
+  const ctaPaddingX   = ctaFontSize * 0.95;
+  const ctaPaddingY   = ctaFontSize * 0.5;
+  const ctaPillWidth  = ctaTextWidth + ctaPaddingX * 2;
   const ctaPillHeight = ctaFontSize + ctaPaddingY * 1.1;
   const ctaPillX = targetWidth / 2 - ctaPillWidth / 2;
   const ctaPillY = ctaY - ctaPillHeight / 2;
 
+  // Outline (kein Fill)
   ctx.save();
-  ctx.fillStyle = COLOR_TERRA;
+  ctx.strokeStyle = COLOR_CREAM_DIM;
+  ctx.lineWidth = lineThickness * 1.2;
   roundRectPath(ctx, ctaPillX, ctaPillY, ctaPillWidth, ctaPillHeight, ctaPillHeight / 2);
-  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 
   ctx.fillStyle = COLOR_CREAM;
@@ -149,11 +192,11 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.font = `700 ${ctaFontSize}px "Open Sans"`;
   ctx.fillText(ctaTextSpaced, targetWidth / 2, ctaY + ctaFontSize * 0.04);
 
-  // === URL / Website unten, dezent in dunklem Salbeigrün ===
+  // === URL unten im Creme-Bereich, in Terrakotta ===
   const urlText = (website || 'www.vinyara.com').toLowerCase();
   const urlFontSize = Math.max(targetWidth, targetHeight) * 0.026;
 
-  ctx.fillStyle = COLOR_SAGE_DK;
+  ctx.fillStyle = COLOR_TERRA;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `600 ${urlFontSize}px "Open Sans"`;
@@ -162,7 +205,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   return canvas;
 };
 
-// === Hilfsfunktionen ===
+// === Hilfsfunktionen (identisch zu Variante 1) ===
 
 function roundRectPath(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -178,8 +221,6 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Zeichnet das Bild wie CSS "object-fit: cover": volle Fläche, kein Verzerren,
-// überschüssiger Bildanteil wird zentriert beschnitten.
 function drawImageCover(ctx, img, x, y, w, h) {
   const imgRatio = img.width / img.height;
   const boxRatio = w / h;
@@ -187,22 +228,21 @@ function drawImageCover(ctx, img, x, y, w, h) {
 
   if (imgRatio > boxRatio) {
     drawHeight = h;
-    drawWidth = h * imgRatio;
-    offsetX = x - (drawWidth - w) / 2;
-    offsetY = y;
+    drawWidth  = h * imgRatio;
+    offsetX    = x - (drawWidth - w) / 2;
+    offsetY    = y;
   } else {
-    drawWidth = w;
+    drawWidth  = w;
     drawHeight = w / imgRatio;
-    offsetX = x;
-    offsetY = y - (drawHeight - h) / 2;
+    offsetX    = x;
+    offsetY    = y - (drawHeight - h) / 2;
   }
 
   ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 }
 
-// Leichtes "Letter-Spacing"-Gefühl für die URL (Canvas kennt kein echtes letter-spacing)
 function addLetterSpacingHint(text) {
-  return text.split('').join('\u200a\u200a'); // hairspaces zwischen Buchstaben
+  return text.split('').join('\u200a\u200a');
 }
 
 function breakLongWord(ctx, word, maxWidth) {
