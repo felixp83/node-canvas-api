@@ -1,12 +1,12 @@
 const { createCanvas } = require('canvas');
 
 /**
- * Vinyara-Style Pinterest Template — Variante 4 (Yoga / Health Flow)
+ * Vinyara-Style Pinterest Template — Variante 4 (Yoga / Health Flow — Updated)
  *
- * Fokus:
- * - sanfte Farbverläufe statt harter Blöcke
- * - emotional warme Wellness-Aura
- * - optimiert für Yoga / Meditation / Health Content
+ * Änderungen:
+ * - CTA: CONTINUE READING
+ * - Bild: full width (kein Rahmen mehr)
+ * - Bottom Area: helles Pastell-Rot
  */
 
 module.exports = async function generateTemplate(
@@ -23,53 +23,46 @@ module.exports = async function generateTemplate(
   const ctx = canvas.getContext('2d');
 
   // =========================
-  // COLOR SYSTEM (Yoga Flow)
+  // COLOR SYSTEM
   // =========================
-  const COLOR_SAND    = '#F6EFE7';
-  const COLOR_GREEN   = '#A7C4A0';
-  const COLOR_LAVENDER= '#B9A7D6';
-  const COLOR_TEXT    = '#2F3B2F';
-  const COLOR_TERRA   = '#C97A53';
+  const COLOR_TEXT = '#2F3B2F';
+  const COLOR_TERRA = '#C97A53';
+
+  // neu: Pastell Rot (Soft Blush)
+  const COLOR_BLUSH = '#F6D6D6';
+  const COLOR_BLUSH_2 = '#FBE4E4';
 
   // =========================
-  // BACKGROUND (Gradient Flow)
+  // BACKGROUND (Soft Blush Flow)
   // =========================
   const bg = ctx.createLinearGradient(0, 0, 0, targetHeight);
-  bg.addColorStop(0, COLOR_SAND);
-  bg.addColorStop(0.5, '#F3F7F2');
-  bg.addColorStop(1, '#F7F1E8');
+  bg.addColorStop(0, COLOR_BLUSH_2);
+  bg.addColorStop(1, COLOR_BLUSH);
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // Soft color aura (Yoga feel)
-  const aura = ctx.createRadialGradient(
-    targetWidth / 2,
-    targetHeight * 0.3,
-    50,
-    targetWidth / 2,
-    targetHeight * 0.3,
-    600
-  );
-  aura.addColorStop(0, 'rgba(167,196,160,0.25)');
-  aura.addColorStop(1, 'rgba(185,167,214,0)');
-
-  ctx.fillStyle = aura;
-  ctx.fillRect(0, 0, targetWidth, targetHeight);
-
   // =========================
-  // IMAGE AREA (soft framed)
+  // IMAGE AREA (FULL WIDTH — FIXED)
   // =========================
-  const imageY = targetHeight * 0.12;
-  const imageH = targetHeight * 0.48;
+  const imageY = 0;
+  const imageH = targetHeight * 0.52;
 
   ctx.save();
   ctx.beginPath();
-  roundRectPath(ctx, 60, imageY, targetWidth - 120, imageH, 40);
+  ctx.rect(0, imageY, targetWidth, imageH);
   ctx.clip();
 
-  drawImageCover(ctx, img, 60, imageY, targetWidth - 120, imageH);
+  drawImageCover(ctx, img, 0, imageY, targetWidth, imageH);
   ctx.restore();
+
+  // leichte Übergangsfläche ins Textfeld
+  const fade = ctx.createLinearGradient(0, imageH - 200, 0, imageH + 200);
+  fade.addColorStop(0, 'rgba(246,214,214,0)');
+  fade.addColorStop(1, COLOR_BLUSH);
+
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, imageH - 200, targetWidth, 400);
 
   // =========================
   // TEXT AREA
@@ -133,9 +126,9 @@ module.exports = async function generateTemplate(
   });
 
   // =========================
-  // CTA (Soft Yoga Button)
+  // CTA (UPDATED)
   // =========================
-  const ctaText = "START YOUR PRACTICE";
+  const ctaText = "CONTINUE READING";
   const ctaSize = 22;
 
   setFont("700", ctaSize);
@@ -152,17 +145,17 @@ module.exports = async function generateTemplate(
   const x = targetWidth / 2 - boxW / 2;
   const y = targetHeight * 0.82;
 
-  // soft gradient button
+  // soft pastel button (matching blush theme)
   const btnGrad = ctx.createLinearGradient(x, y, x + boxW, y + boxH);
-  btnGrad.addColorStop(0, 'rgba(167,196,160,0.35)');
-  btnGrad.addColorStop(1, 'rgba(185,167,214,0.25)');
+  btnGrad.addColorStop(0, 'rgba(246,214,214,0.85)');
+  btnGrad.addColorStop(1, 'rgba(251,228,228,0.9)');
 
   ctx.fillStyle = btnGrad;
   roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
   ctx.fill();
 
   // subtle border
-  ctx.strokeStyle = 'rgba(47,59,47,0.25)';
+  ctx.strokeStyle = 'rgba(47,59,47,0.18)';
   ctx.lineWidth = 1;
   roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
   ctx.stroke();
@@ -173,13 +166,13 @@ module.exports = async function generateTemplate(
   ctx.fillText(spaced, targetWidth / 2, y + boxH / 2);
 
   // =========================
-  // URL (calm accent)
+  // URL
   // =========================
   const url = (website || "www.vinyara.com").toLowerCase();
 
   setFont("600", 20);
   ctx.fillStyle = COLOR_TERRA;
-  ctx.textAlign = 'center';
+
   ctx.fillText(
     addLetterSpacingHint(url),
     targetWidth / 2,
