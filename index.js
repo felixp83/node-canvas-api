@@ -27,6 +27,8 @@ const oval = require('./templates/10_Oval');
 const e_sanft = require('./templates/e_01_Sanft');
 const e_smooth = require('./templates/e_02_Smooth');
 const e_creme = require('./templates/e_03_Creme');
+const e_farbe = require('./templates/e_04_Farbe');
+const e_muster = require('./templates/e_05_Muster');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -891,6 +893,79 @@ app.post('/e_creme', async (req, res) => {
   }
 });
 
+// Route: e_Farbe Template
+app.post('/e_farbe', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await e_farbe(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-e_farbe-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+    
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Route: e_Muster Template
+app.post('/e_Muster', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await e_muster(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-e_muster-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+    
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
 
 
 app.listen(port, () => {
