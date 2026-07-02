@@ -1,1 +1,256 @@
+const { createCanvas } = require('canvas');
 
+/**
+ * Vinyara-Style Pinterest Template — Variante 4 (Yoga / Health Flow)
+ *
+ * Fokus:
+ * - sanfte Farbverläufe statt harter Blöcke
+ * - emotional warme Wellness-Aura
+ * - optimiert für Yoga / Meditation / Health Content
+ */
+
+module.exports = async function generateTemplate(
+  img,
+  overlayText,
+  _targetWidth,
+  _targetHeight,
+  website
+) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
+
+  // =========================
+  // COLOR SYSTEM (Yoga Flow)
+  // =========================
+  const COLOR_SAND    = '#F6EFE7';
+  const COLOR_GREEN   = '#A7C4A0';
+  const COLOR_LAVENDER= '#B9A7D6';
+  const COLOR_TEXT    = '#2F3B2F';
+  const COLOR_TERRA   = '#C97A53';
+
+  // =========================
+  // BACKGROUND (Gradient Flow)
+  // =========================
+  const bg = ctx.createLinearGradient(0, 0, 0, targetHeight);
+  bg.addColorStop(0, COLOR_SAND);
+  bg.addColorStop(0.5, '#F3F7F2');
+  bg.addColorStop(1, '#F7F1E8');
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // Soft color aura (Yoga feel)
+  const aura = ctx.createRadialGradient(
+    targetWidth / 2,
+    targetHeight * 0.3,
+    50,
+    targetWidth / 2,
+    targetHeight * 0.3,
+    600
+  );
+  aura.addColorStop(0, 'rgba(167,196,160,0.25)');
+  aura.addColorStop(1, 'rgba(185,167,214,0)');
+
+  ctx.fillStyle = aura;
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // =========================
+  // IMAGE AREA (soft framed)
+  // =========================
+  const imageY = targetHeight * 0.12;
+  const imageH = targetHeight * 0.48;
+
+  ctx.save();
+  ctx.beginPath();
+  roundRectPath(ctx, 60, imageY, targetWidth - 120, imageH, 40);
+  ctx.clip();
+
+  drawImageCover(ctx, img, 60, imageY, targetWidth - 120, imageH);
+  ctx.restore();
+
+  // =========================
+  // TEXT AREA
+  // =========================
+  const maxWidth = targetWidth * 0.78;
+  const maxLines = 2;
+
+  let lines = [];
+  let chosenSize = 16;
+  let lineHeight = 0;
+
+  const setFont = (weight, size) => {
+    ctx.font = `${weight} ${size}px "Open Sans", Arial, sans-serif`;
+  };
+
+  for (let size = 110; size >= 20; size -= 2) {
+    setFont("700", size);
+    lineHeight = size * 1.25;
+
+    const testLines = wrapText(ctx, overlayText, maxWidth, maxLines);
+
+    const normalize = (s) =>
+      s.replace(/-/g, '').replace(/\s+/g, '').toLowerCase();
+
+    const joined = normalize(testLines.join(''));
+    const original = normalize(overlayText);
+
+    const totalHeight = testLines.length * lineHeight;
+
+    if (
+      testLines.length <= maxLines &&
+      totalHeight < targetHeight * 0.25 &&
+      joined === original
+    ) {
+      chosenSize = size;
+      lines = testLines;
+      break;
+    }
+  }
+
+  if (!lines.length) {
+    setFont("700", 20);
+    lineHeight = 20 * 1.25;
+    lines = wrapText(ctx, overlayText, maxWidth, maxLines);
+  }
+
+  // =========================
+  // HEADLINE
+  // =========================
+  ctx.fillStyle = COLOR_TEXT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  setFont("700", chosenSize);
+
+  const blockH = lines.length * lineHeight;
+  const startY = targetHeight * 0.66 - blockH / 2 + lineHeight / 2;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, targetWidth / 2, startY + i * lineHeight);
+  });
+
+  // =========================
+  // CTA (Soft Yoga Button)
+  // =========================
+  const ctaText = "START YOUR PRACTICE";
+  const ctaSize = 22;
+
+  setFont("700", ctaSize);
+
+  const spaced = addLetterSpacingHint(ctaText);
+  const textWidth = ctx.measureText(spaced).width;
+
+  const paddingX = 26;
+  const paddingY = 14;
+
+  const boxW = textWidth + paddingX * 2;
+  const boxH = ctaSize + paddingY * 2;
+
+  const x = targetWidth / 2 - boxW / 2;
+  const y = targetHeight * 0.82;
+
+  // soft gradient button
+  const btnGrad = ctx.createLinearGradient(x, y, x + boxW, y + boxH);
+  btnGrad.addColorStop(0, 'rgba(167,196,160,0.35)');
+  btnGrad.addColorStop(1, 'rgba(185,167,214,0.25)');
+
+  ctx.fillStyle = btnGrad;
+  roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
+  ctx.fill();
+
+  // subtle border
+  ctx.strokeStyle = 'rgba(47,59,47,0.25)';
+  ctx.lineWidth = 1;
+  roundRectPath(ctx, x, y, boxW, boxH, boxH / 2);
+  ctx.stroke();
+
+  ctx.fillStyle = COLOR_TEXT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spaced, targetWidth / 2, y + boxH / 2);
+
+  // =========================
+  // URL (calm accent)
+  // =========================
+  const url = (website || "www.vinyara.com").toLowerCase();
+
+  setFont("600", 20);
+  ctx.fillStyle = COLOR_TERRA;
+  ctx.textAlign = 'center';
+  ctx.fillText(
+    addLetterSpacingHint(url),
+    targetWidth / 2,
+    targetHeight * 0.94
+  );
+
+  return canvas;
+};
+
+// =========================
+// HELPERS
+// =========================
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.closePath();
+}
+
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+
+  let dw, dh, ox, oy;
+
+  if (imgRatio > boxRatio) {
+    dh = h;
+    dw = h * imgRatio;
+    ox = x - (dw - w) / 2;
+    oy = y;
+  } else {
+    dw = w;
+    dh = w / imgRatio;
+    ox = x;
+    oy = y - (dh - h) / 2;
+  }
+
+  ctx.drawImage(img, ox, oy, dw, dh);
+}
+
+function addLetterSpacingHint(text) {
+  return text.split('').join('\u200a\u200a');
+}
+
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = text.trim().split(/\s+/);
+  const lines = [];
+  let current = '';
+
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+
+      if (lines.length === maxLines) return lines;
+    }
+  }
+
+  if (current && lines.length < maxLines) {
+    lines.push(current);
+  }
+
+  return lines;
+}
